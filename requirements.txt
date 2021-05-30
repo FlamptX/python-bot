@@ -1,0 +1,11 @@
+discord.py
+discord-py-slash-command
+discord-components
+aiohttp
+asyncio
+python-dotenv
+pymongo
+dnspython
+requests
+dblpy
+numpy

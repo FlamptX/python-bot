@@ -1,0 +1,47 @@
+<html lang="en">
+<head>
+    <title>Python Bot Api</title>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="favicon.ico?v=2" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico?v=2" type="image/x-icon" />
+</head>
+<body>
+
+<center>
+    <h1>Python Bot Api</h1>
+    <br><br>
+    <input id="content" placeholder="Message">
+    <button onclick="send()">Send</button>
+    <br>
+    <h2 id="text" style="visibility: hidden;">Message was sent!</h2>
+      <script>
+      async function send() {
+          var content = document.getElementById("content").value;
+
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "https://service-6674.something.gg/api/messages", true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.send(JSON.stringify({
+              "content": content
+          }));
+
+          xhr.onreadystatechange = function () {
+              if (this.readyState != 4) return;
+
+              var text = document.getElementById("text")
+              if (this.status == 200) {
+                  text.innerHTML = "Message was sent!"
+                  text.style.visibility = "visible"
+              } else {
+                  text.innerHTML = "Message failed to send."
+                  text.style.visibility = "visible"
+              }
+          };
+      }
+  </script>
+</center>
+
+</body>
+
+</html>
