@@ -50,7 +50,7 @@ class Evaluation(commands.Cog):
                     content=f"{ctx.author.name}'s code evaluation was deleted."
                 )
         except asyncio.TimeoutError:
-            await ctx.send(f"{ctx.author.mention} prompt canceled.")
+            pass
 
     @eval.error
     async def eval_error(self, ctx, error):
