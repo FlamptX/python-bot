@@ -31,14 +31,14 @@ class Evaluation(commands.Cog):
                 message = await ctx.send(
                     f"{ctx.author.mention} {output}",
                     components=[
-                        Button(style=ButtonStyle.gray, label=" ", emoji=emoji),
+                        Button(style=ButtonStyle.gray, label=" ", emoji=emoji),
                     ]
                 )
             except discord.HTTPException:
                 message = await ctx.send(
                     f":warning: Your eval job has completed with return code 0.\n\n```[Too long message]             ```",
                     components=[
-                        Button(style=ButtonStyle.gray, label=" ", emoji=emoji),
+                        Button(style=ButtonStyle.gray, label=" ", emoji=emoji),
                     ]
                 )
 
