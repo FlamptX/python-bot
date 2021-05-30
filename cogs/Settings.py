@@ -71,7 +71,7 @@ class SettingsCog(commands.Cog):
         while True:
             try:
                 res = await self.bot.wait_for("button_click", timeout=15)
-                if res.channel == ctx.channel and res.user.id == ctx.author.id:
+                if res.message.id == msg.id and res.user.id == ctx.author.id:
                     if res.component.label == "Yes":
                         collection.update_one({"_id": ctx.guild.id}, {"$set": {"prefix": ["py ", "PY ", "Py ", "pY "]}})
                         answer = "Prefix changed to `py`"

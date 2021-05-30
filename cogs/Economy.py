@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord_components import Button, ButtonStyle
 import asyncio
 import random
 import datetime
@@ -598,28 +599,34 @@ class Economy(commands.Cog):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        msg = await ctx.send(f":exclamation: {ctx.author.mention} are you sure you want to do this? Your company will be lost forever.")
-        emojis = ["✅", "❌"]
-        for emoji in emojis:
-            await msg.add_reaction(emoji)
         user = collection.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
 
-        def check(react, react_user):
-            return react_user == ctx.author and str(react.emoji) == "✅" or react_user == ctx.author and str(react.emoji) == "❌"
+        msg = await ctx.send(
+            f":exclamation: {ctx.author.mention} are you sure you want to do this? Your company will be lost forever.",
+            components=[
+                [
+                    Button(style=ButtonStyle.green, label="Yes"),
+                    Button(style=ButtonStyle.red, label="No"),
+                ]
+            ]
+        )
 
         try:
-            reaction, reaction_user = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
-            if reaction.emoji == "✅":
+            res = await self.bot.wait_for('button_click', timeout=60)
+            if res.component.label == "Yes" and res.message.id == msg.id and res.user.id == ctx.author.id:
+                await msg.delete()
                 await ctx.send(f"**{user['company']['name']}** was shutdown by {ctx.author.name}.")
                 collection.update_one({"_id": ctx.author.id}, {"$unset": {"company": ""}})
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
-            elif reaction.emoji == "❌":
-                await ctx.send("Ok, you still have your company.")
+            elif res.component.label == "No" and res.message.id == msg.id and res.user.id == ctx.author.id:
+                await msg.delete()
+                await ctx.send("Canceled.")
+                return
         except asyncio.TimeoutError:
-            pass
+            await ctx.send(f"{ctx.author.mention} prompt canceled.")
 
     @commands.command()
     async def company(self, ctx):
@@ -1451,10 +1458,10 @@ class Economy(commands.Cog):
         await msg.delete()
         await ctx.send(embed=embed)
 
-    @build.error
-    async def build_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Specify the device you want to build. Example: `build computer`")
+    # @build.error
+    # async def build_error(self, ctx, error):
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await ctx.send("Specify the device you want to build. Example: `build computer`")
 
     @give.error
     async def give_error(self, ctx, error):

@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord_components import Button, ButtonStyle
 import discord
 import asyncio
 import signal
@@ -26,22 +27,30 @@ class Evaluation(commands.Cog):
             signal.alarm(0)
 
             try:
-                message = await ctx.send(f"{ctx.author.mention} {output}")
+                emoji = self.bot.get_emoji(833349328277471282)
+                message = await ctx.send(
+                    f"{ctx.author.mention} {output}",
+                    components=[
+                        Button(style=ButtonStyle.gray, label=" ", emoji=emoji),
+                    ]
+                )
             except discord.HTTPException:
-                await ctx.send(f":warning: Your eval job has completed with return code 0.\n\n```[Too long message]             ```")
-                return
+                message = await ctx.send(
+                    f":warning: Your eval job has completed with return code 0.\n\n```[Too long message]             ```",
+                    components=[
+                        Button(style=ButtonStyle.gray, label=" ", emoji=emoji),
+                    ]
+                )
 
-            emoji = self.bot.get_emoji(833349328277471282)
-            await message.add_reaction(emoji)
-
-            def check(react, react_user):
-                return react_user == ctx.author and react.emoji.id == 833349328277471282
-
-            try:
-                await self.bot.wait_for("reaction_add", check=check, timeout=20)
-                await message.edit(content=f"{ctx.author.name}'s code evaluation was deleted.", delete_after=5)
-            except asyncio.TimeoutError:
-                return
+        try:
+            res = await self.bot.wait_for('button_click', timeout=60)
+            if res.message.id == message.id and res.user.id == ctx.author.id:
+                await res.respond(
+                    type=7,
+                    content=f"{ctx.author.name}'s code evaluation was deleted."
+                )
+        except asyncio.TimeoutError:
+            await ctx.send(f"{ctx.author.mention} prompt canceled.")
 
     @eval.error
     async def eval_error(self, ctx, error):
