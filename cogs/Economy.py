@@ -8,7 +8,7 @@ import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import difflib
-from dwp import users as u
+from main import users as u
 
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
