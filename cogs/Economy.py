@@ -877,7 +877,7 @@ class Economy(commands.Cog):
                             if amount <= int(msg.content):
                                 await ctx.send("You don't have that many apples.")
                                 return
-                            i = 1
+                            i = 0
                             found = 0
                             for item in inventory:
                                 if item == "apple" and found <= amount:
