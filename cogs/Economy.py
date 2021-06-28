@@ -861,7 +861,6 @@ class Economy(commands.Cog):
                 for thing in inventory:
                     if thing == "apple":
                         amount += 1
-                level = user["level"]
                 if amount > 1:
                     await ctx.send(f"How many apples do you want to eat? You have {amount} apples.")
 
@@ -881,31 +880,31 @@ class Economy(commands.Cog):
                             found = 0
                             for item in inventory:
                                 if item == "apple" and found <= amount:
-                                    print("Item: " + inventory[i])
                                     del inventory[i]
-                                    level = float(level) + 1.0
+                                    user["level"] = str(float(user["level"]) + 1)
                                     collection.update_one({"_id": ctx.author.id},
-                                                          {"$set": {"level": str(level)}})
+                                                          {"$set": {"level": user["level"]}})
                                     collection.update_one({"_id": ctx.author.id},
                                                           {"$set": {"inventory": inventory}})
                                     found += 1
                                 i += 1
                             if msg.content != "1":
                                 await ctx.send(
-                                    f"You ate {i} apples and leveled up! You are now level **{str(level)[:-2]}**")
+                                    f"You ate {i} apples and leveled up! You are now level **{user['level'][:-2]}**")
                             else:
                                 await ctx.send(
-                                    f"You ate an apple and leveled up! You are now level **{str(level)[:-2]}**")
+                                    f"You ate an apple and leveled up! You are now level **{user['level'][:-2]}**")
                     except asyncio.TimeoutError:
                         await ctx.send("You didn't reply...")
                         return
                 elif amount == 1:
-                    level = float(level) + 1.0
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(level)}})
+                    user["level"] = str(float(user["level"]) + 1)
+                    collection.update_one({"_id": ctx.author.id},
+                                          {"$set": {"level": user["level"]}})
                     inventory = user["inventory"]
                     inventory.remove("apple")
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
-                    await ctx.send(f"You ate an apple and leveled up! You are now level **{str(level)[:-2]}**")
+                    await ctx.send(f"You ate an apple and leveled up! You are now level **{str(user['level'])[:-2]}**")
                 else:
                     await ctx.send("Invalid number.")
                     return
