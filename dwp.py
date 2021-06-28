@@ -60,11 +60,6 @@ data = {
     "content": "!d bump"
 }
 
-async def bump():
-    while True:
-        requests.post("https://discord.com/api/v9/channels/799698764935331852/messages", headers=headers, data=data)
-        await asyncio.sleep(random.randint(7205, 7215))
-
 async def update_data():
     while True:
         requests.post("https://discord.com/api/v9/channels/799698764935331852/messages", headers=headers, data=data)
@@ -98,7 +93,6 @@ async def update_data():
 async def on_ready():
     bot.loop.create_task(status_task())
     # bot.loop.create_task(update_data())
-    bot.loop.create_task(bump())
     DiscordComponents(bot)
     print('The bot is online')
 
@@ -112,13 +106,12 @@ async def on_message(message):
 
     guild = collection.find_one({"_id": message.guild.id})
 
-    try:
-        if guild is not None:
+    if guild is not None:
+        try:
             active = guild['code_channel_active']
-        else:
-            await bot.process_commands(message)
-            return
-    except KeyError:
+        except KeyError:
+            pass
+    else:
         await bot.process_commands(message)
         return
 
@@ -188,7 +181,7 @@ async def on_message(message):
                 await message.channel.send("It seems that the code message was deleted. Use `cc init` to send it again.")
                 await bot.process_commands(message)
                 return
-    except KeyError:
+    except Exception:
         pass
 
     msg = message.content.lower()

@@ -4,8 +4,8 @@ discord-components
 aiohttp
 asyncio
 python-dotenv
-pymongo
 dnspython
+pymongo
 requests
 dblpy
 numpy
