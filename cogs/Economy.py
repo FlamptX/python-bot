@@ -603,6 +603,9 @@ class Economy(commands.Cog):
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
+        if user.get("company") is None:
+            await ctx.send("You don't have a company.")
+            return
 
         msg = await ctx.send(
             f":exclamation: {ctx.author.mention} are you sure you want to do this? Your company will be lost forever.",
@@ -617,13 +620,11 @@ class Economy(commands.Cog):
         try:
             res = await self.bot.wait_for('button_click', timeout=60)
             if res.component.label == "Yes" and res.message.id == msg.id and res.user.id == ctx.author.id:
-                await msg.delete()
-                await ctx.send(f"**{user['company']['name']}** was shutdown by {ctx.author.name}.")
+                await res.respond(type=7, content=f"{ctx.author.mention} you no longer own **{user['company']['name']}**.", components=[])
                 collection.update_one({"_id": ctx.author.id}, {"$unset": {"company": ""}})
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
             elif res.component.label == "No" and res.message.id == msg.id and res.user.id == ctx.author.id:
-                await msg.delete()
-                await ctx.send("Canceled.")
+                await res.respond(type=7, content="Canceled.", components=[])
                 return
         except asyncio.TimeoutError:
             await ctx.send(f"{ctx.author.mention} prompt canceled.")

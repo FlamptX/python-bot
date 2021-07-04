@@ -41,6 +41,10 @@ class Help(commands.Cog):
                                       color=int("0x36393f", 16))
             await ctx.send(embed=embed_var)
 
+    @help.command(aliases=["shop", "company", "sell", "buy", "bal", "inv", "inventory", "balance", "shutdowncompany", "work", "daily"])
+    async def economy_commands(self, ctx):
+        await self.economy(ctx)
+
     @help.command()
     async def economy(self, ctx):
         embed_var = discord.Embed(title="Economy",
