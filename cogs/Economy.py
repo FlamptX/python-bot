@@ -1016,7 +1016,10 @@ class Economy(commands.Cog):
                 em = discord.Embed(title="Good wifi router purchase", description=f"{ctx.author.mention} bought **good wifi router** for `$1500`", color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("good wifi router")
-                inventory.remove("slow wifi router")
+                try:
+                    inventory.remove("slow wifi router")
+                except ValueError:
+                    pass
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
@@ -1035,10 +1038,14 @@ class Economy(commands.Cog):
                 em = discord.Embed(title="Very fast wifi router purchase", description=f"{ctx.author.mention} bought **very fast wifi router** for `$4000`", color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("very fast wifi router")
-                if "slow wifi router" in user["inventory"]:
+                try:
                     inventory.remove("slow wifi router")
-                elif "good wifi router" in user["inventory"]:
+                except ValueError:
+                    pass
+                try:
                     inventory.remove("good wifi router")
+                except ValueError:
+                    pass
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']

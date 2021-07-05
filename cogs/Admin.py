@@ -50,6 +50,7 @@ class Admin(commands.Cog):
         args = {
             "discord": discord,
             "commands": commands,
+            "users": users,
             "sys": sys,
             "os": os,
             "requests": requests,
