@@ -341,13 +341,13 @@ class Economy(commands.Cog):
 
         if "high quality laptop" in user["inventory"]:
             remove = "high quality laptop"
-            break_laptop = random.randint(1, 100) <= 4 and user["money"] > 4500
+            break_laptop = random.randint(1, 100) <= 3 and user["money"] > 4500
         elif "average laptop" in user["inventory"]:
             remove = "average laptop"
-            break_laptop = random.randint(1, 100) <= 11 and user["money"] > 2000
+            break_laptop = random.randint(1, 100) <= 8 and user["money"] > 2000
         elif "low budget laptop" in user["inventory"]:
             remove = "low budget laptop"
-            break_laptop = random.randint(1, 100) <= 20 and user["money"] > 750
+            break_laptop = random.randint(1, 100) <= 18 and user["money"] > 750
         else:
             await ctx.send(random.choice([f"{ctx.author.mention} what do you think you're gonna work with? Buy a laptop.", f"{ctx.author.mention} you don't have a laptop. Buy one.", f"{ctx.author.mention} buy a laptop to work."]))
             date = datetime.datetime.now().replace(microsecond=0)
@@ -357,10 +357,10 @@ class Economy(commands.Cog):
 
         if "good wifi router" in user["inventory"]:
             remove_router = "good wifi router"
-            break_router = random.randint(1, 100) <= 10 and user["money"] > 15000
+            break_router = random.randint(1, 100) <= 8 and user["money"] > 15000
         elif "very fast wifi router" in user["inventory"]:
             remove_router = "very fast wifi router"
-            break_router = random.randint(1, 100) <= 4 and user["money"] > 4000
+            break_router = random.randint(1, 100) <= 3 and user["money"] > 4000
         else:
             break_router = False
 
