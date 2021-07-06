@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord_components import Button, ButtonStyle
+from discord_components import Button, ButtonStyle, InteractionType
 import asyncio
 import random
 import datetime
@@ -41,9 +41,10 @@ pipe_price = random.randint(80, 110)
 ssd_price = random.randint(150, 200)
 psu_price = random.randint(200, 250)
 
+
 def item_emoji(part):
     if part == "cable":
-       return "<:powerplug:831458832013590569>"
+        return "<:powerplug:831458832013590569>"
     elif part == "fan":
         return "<:fan:831458831690760192>"
     elif part == "hard disk":
@@ -65,6 +66,7 @@ def item_emoji(part):
     else:
         return ""
 
+
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -74,7 +76,8 @@ class Economy(commands.Cog):
     async def toggleeconomy(self, ctx, option: str = None):
         guild = guilds.find_one({"_id": ctx.guild.id})
         if option is None:
-            await ctx.send("Use this command to toggle the economy for this guild.\nUsage: `economy on` or `economy off`")
+            await ctx.send(
+                "Use this command to toggle the economy for this guild.\nUsage: `economy on` or `economy off`")
         elif option.lower() in ["enable", "on"]:
             if guild["economy_disabled"]:
                 guilds.update_one({"_id": ctx.guild.id}, {"$set": {"economy_disabled": False}})
@@ -96,7 +99,8 @@ class Economy(commands.Cog):
             await ctx.send("Economy is disabled for this server.")
             return
         try:
-            collection.insert_one({"_id": ctx.author.id, "level": "1.0", "money": 100, "job": "freelancer", "inventory": ["low budget laptop", "slow wifi router"], "antivirus_work": 0})
+            collection.insert_one({"_id": ctx.author.id, "level": "1.0", "money": 100, "job": "freelancer",
+                                   "inventory": ["low budget laptop", "slow wifi router"], "antivirus_work": 0})
         except Exception:
             await ctx.send(
                 f"{ctx.author.mention} you already have a career. If you want to quit use `quit`")
@@ -119,7 +123,8 @@ class Economy(commands.Cog):
                 await ctx.send("You don't have a job.")
             else:
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
-                await ctx.send(f"{ctx.author.mention} you have quit your job. If you want to get a new job use `findjob`")
+                await ctx.send(
+                    f"{ctx.author.mention} you have quit your job. If you want to get a new job use `findjob`")
 
     @commands.command()
     async def findjob(self, ctx):
@@ -349,7 +354,10 @@ class Economy(commands.Cog):
             remove = "low budget laptop"
             break_laptop = random.randint(1, 100) <= 18 and user["money"] > 750
         else:
-            await ctx.send(random.choice([f"{ctx.author.mention} what do you think you're gonna work with? Buy a laptop.", f"{ctx.author.mention} you don't have a laptop. Buy one.", f"{ctx.author.mention} buy a laptop to work."]))
+            await ctx.send(random.choice(
+                [f"{ctx.author.mention} what do you think you're gonna work with? Buy a laptop.",
+                 f"{ctx.author.mention} you don't have a laptop. Buy one.",
+                 f"{ctx.author.mention} buy a laptop to work."]))
             date = datetime.datetime.now().replace(microsecond=0)
             collection.update_one({"_id": ctx.author.id},
                                   {"$set": {"last_work": str(date)}})
@@ -365,7 +373,8 @@ class Economy(commands.Cog):
             break_router = False
 
         if break_laptop and break_router:
-            await ctx.send(f"{ctx.author.mention} your laptop and wifi router just broke! You can't work until you buy a new laptop.")
+            await ctx.send(
+                f"{ctx.author.mention} your laptop and wifi router just broke! You can't work until you buy a new laptop.")
             inventory = user["inventory"]
             inventory.remove(remove)
             collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -394,7 +403,8 @@ class Economy(commands.Cog):
             return
 
         if "antivirus" not in user["inventory"] and random.randint(1, 100) <= 10 and user["money"] > 500:
-            msg = random.choice(["When will you buy that antivirus?", "You should buy an antivirus.", "Buy an antivirus to prevent this."])
+            msg = random.choice(["When will you buy that antivirus?", "You should buy an antivirus.",
+                                 "Buy an antivirus to prevent this."])
             await ctx.send(f"**VIRUS!**\n{ctx.author.name} you just lost $250 because of a virus. {msg}")
             collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 250}})
         try:
@@ -427,7 +437,9 @@ class Economy(commands.Cog):
                                               f"You saw a **{emoji} {part}** and just took it.",
                                               f"You came upon a **{emoji} {part}** and took it."]))
             elif user['job'] in jobs3:
-                part = random.choice(["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "water cooler tank", "water cooler pipe", "ssd", "psu"])
+                part = random.choice(
+                    ["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "water cooler tank",
+                     "water cooler pipe", "ssd", "psu"])
                 inventory.append(part)
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 emoji = item_emoji(part)
@@ -436,7 +448,9 @@ class Economy(commands.Cog):
                                               f"You saw a **{emoji} {part}** and just took it.",
                                               f"You came upon a **{emoji} {part}** and took it."]))
             elif user['job'] in jobs4:
-                part = random.choice(["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "water cooler tank", "water cooler pipe", "ssd", "apple", "psu"])
+                part = random.choice(
+                    ["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "water cooler tank",
+                     "water cooler pipe", "ssd", "apple", "psu"])
                 inventory.append(part)
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 emoji = item_emoji(part)
@@ -463,19 +477,23 @@ class Economy(commands.Cog):
             if str(new_level)[-1:] == "0":  # Check level up
                 if int(str(new_level)[:-2]) == 3:  # Level up and new job
                     new_job = random.choice(jobs1)
-                    await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
+                    await ctx.send(
+                        f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 elif int(str(new_level)[:-2]) == 7:
                     new_job = random.choice(jobs2)
-                    await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
+                    await ctx.send(
+                        f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 elif int(str(new_level)[:-2]) == 15:
                     new_job = random.choice(jobs3)
-                    await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
+                    await ctx.send(
+                        f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 elif int(str(new_level)[:-2]) == 25:
                     new_job = random.choice(jobs4)
-                    await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
+                    await ctx.send(
+                        f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 else:  # Level up
                     await ctx.send(
@@ -578,11 +596,13 @@ class Economy(commands.Cog):
         try:
             company = user["company"]
             if company:
-                await ctx.send(f"{ctx.author.name} you already have a company. If you want to start a new company use `shutdowncompany`")
+                await ctx.send(
+                    f"{ctx.author.name} you already have a company. If you want to start a new company use `shutdowncompany`")
                 return
         except KeyError:
             if user["job"] != "Not hired":
-                await ctx.send("You have to quit your current job to start a company with `quit`. (you can always find a new job)")
+                await ctx.send(
+                    "You have to quit your current job to start a company with `quit`. (you can always find a new job)")
                 return
             if float(user["level"]) < 7:
                 await ctx.send("You need to be atleast level **7**.")
@@ -590,9 +610,11 @@ class Economy(commands.Cog):
             if name is None:
                 await ctx.send("You must pick a name for the company.\nExample: `startcompany google`")
             else:
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"company": {"name": name, "workers": 0, "building": "None"}}})
+                collection.update_one({"_id": ctx.author.id},
+                                      {"$set": {"company": {"name": name, "workers": 0, "building": "None"}}})
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Company Owner"}})
-                await ctx.send(f"{ctx.author.mention} you have started a tech company called **{name}**. Grow your business by hiring workers, advertising and buying better equipment.\nFor more information use `help company`")
+                await ctx.send(
+                    f"{ctx.author.mention} you have started a tech company called **{name}**. Grow your business by hiring workers, advertising and buying better equipment.\nFor more information use `help company`")
 
     @commands.command()
     async def shutdowncompany(self, ctx):
@@ -620,7 +642,9 @@ class Economy(commands.Cog):
         try:
             res = await self.bot.wait_for('button_click', timeout=60)
             if res.component.label == "Yes" and res.message.id == msg.id and res.user.id == ctx.author.id:
-                await res.respond(type=7, content=f"{ctx.author.mention} you no longer own **{user['company']['name']}**.", components=[])
+                await res.respond(type=7,
+                                  content=f"{ctx.author.mention} you no longer own **{user['company']['name']}**.",
+                                  components=[])
                 collection.update_one({"_id": ctx.author.id}, {"$unset": {"company": ""}})
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
             elif res.component.label == "No" and res.message.id == msg.id and res.user.id == ctx.author.id:
@@ -643,7 +667,9 @@ class Economy(commands.Cog):
         except KeyError:
             await ctx.send("You don't have a company. Start one with `startcompany`")
             return
-        embed = discord.Embed(title=f"**{ctx.author.name}'s company**", description=f"Name: **{user['company']['name']}**\n\nBuilding: **{user['company']['building']}**\nWorkers: **{user['company']['workers']}**ㅤㅤㅤㅤㅤㅤ", color=discord.Color.dark_blue())
+        embed = discord.Embed(title=f"**{ctx.author.name}'s company**",
+                              description=f"Name: **{user['company']['name']}**\n\nBuilding: **{user['company']['building']}**\nWorkers: **{user['company']['workers']}**ㅤㅤㅤㅤㅤㅤ",
+                              color=discord.Color.dark_blue())
         embed.set_thumbnail(url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -842,7 +868,8 @@ class Economy(commands.Cog):
             item = fl + item[1:]
             parts = f"{parts}\n**{emoji}{item}**"
             i += 1
-        em = discord.Embed(title=f"{ctx.author.name}s inventory", description=f"Laptops:{laptops}\n\nWifi router:{wifi}\n\nParts:{parts}\n\nOther:{other}",
+        em = discord.Embed(title=f"{ctx.author.name}s inventory",
+                           description=f"Laptops:{laptops}\n\nWifi router:{wifi}\n\nParts:{parts}\n\nOther:{other}",
                            color=discord.Colour.blue())
         await ctx.send(embed=em)
 
@@ -917,26 +944,103 @@ class Economy(commands.Cog):
                 await ctx.send("You don't have that item.")
 
     @commands.command()
-    async def shop(self, ctx, page=None):
+    async def shop(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        if page == "1" or page == "one" or page == "first" or page is None:
-            em = discord.Embed(title="Shop", description=":keyboard: **Low budget laptop `$750`**\nBasic laptop for freelancers, slow and easily breaks.\n\n:computer: **Average laptop `$2000`**\nWorks alright, medium speed and doesn't break often.\n\n:desktop: **High quality laptop `$4500`**\nThe fastest, hardly breaks.\n\n:fax: **Good wifi router `$1500`**\nMedium speed, will get the job done faster.\n\n:satellite: **Very fast wifi router `$4000`**\nLightning fast, almost never lags.\n\n:microbe: **Antivirus `$500`**\nProtect your money from viruses that can randomly steal. Expires after working 12 times.\n\n:shield: **Firewall `$750`**\nProtect your money from hackers. Expires after working 5 times.", color=discord.Colour.green())
-            em.set_footer(text="py buy {item} to purchase ─ Page 1 of 3")
-            await ctx.send(embed=em)
-        elif page == "2" or page == "two" or page == "second":
-            em = discord.Embed(title="Company shop", description=":house_abandoned: **Old building `$5000`**\nPretty old, but useful. Maximum of __3 workers__.\n\n<:building:829326857135718411> **Medium office building `$10000`**\nGood work environment. Maximum of __7 workers__.\n\n:office: **Large office building `$17500`**\nA lot of space. Also looks good. Maximum of __15 workers__.\n\n<:skyscraper:829330045469327411> **Skyscraper `$30000`**\nKinda expensive but has a lot of space. Maximum of __25 workers__.\n\n", color=discord.Colour.green())
-            em.set_footer(text="py buy {item} to purchase ─ Page 2 of 3")
-            await ctx.send(embed=em)
-        elif page == "3" or page == "three" or page == "third":
-            em = discord.Embed(title="Shop", description=":apple: **Apple** `$10000`\nEat this apple to instantly level up!", color=discord.Colour.green())
-            em.set_footer(text="py buy {item} to purchase ─ Page 3 of 3")
-            await ctx.send(embed=em)
-        elif page is not None:
-            await ctx.send(f"There is no shop page {page}")
-        else:
-            await ctx.send(f"There is no such shop page")
+
+        em1 = discord.Embed(title="Shop",
+                            description=":keyboard: **Low budget laptop `$750`**\nBasic laptop for freelancers, slow and easily breaks.\n\n:computer: **Average laptop `$2000`**\nWorks alright, medium speed and doesn't break often.\n\n:desktop: **High quality laptop `$4500`**\nThe fastest, hardly breaks.\n\n:fax: **Good wifi router `$1500`**\nMedium speed, will get the job done faster.\n\n:satellite: **Very fast wifi router `$4000`**\nLightning fast, almost never lags.\n\n:microbe: **Antivirus `$500`**\nProtect your money from viruses that can randomly steal. Expires after working 12 times.\n\n:shield: **Firewall `$750`**\nProtect your money from hackers. Expires after working 5 times.",
+                            color=discord.Colour.green())
+
+        em2 = discord.Embed(title="Company shop",
+                            description=":house_abandoned: **Old building `$5000`**\nPretty old, but useful. Maximum of __3 workers__.\n\n<:building:829326857135718411> **Medium office building `$10000`**\nGood work environment. Maximum of __7 workers__.\n\n:office: **Large office building `$17500`**\nA lot of space. Also looks good. Maximum of __15 workers__.\n\n<:skyscraper:829330045469327411> **Skyscraper `$30000`**\nKinda expensive but has a lot of space. Maximum of __25 workers__.\n\n",
+                            color=discord.Colour.green())
+
+        em3 = discord.Embed(title="Shop",
+                            description=":apple: **Apple** `$10000`\nEat this apple to instantly level up!",
+                            color=discord.Colour.green())
+
+        embed_list = [em1, em2, em3]
+
+        for em in embed_list:
+            em.set_footer(text="py buy <item> to purchase")
+
+        current = 0
+        # Sending first message
+        main_message = await ctx.send(
+            embed=embed_list[current],
+            components=[
+                [
+                    Button(
+                        id="back",
+                        label="Back",
+                        style=ButtonStyle.grey
+                    ),
+                    Button(
+                        label=f"Page {int(embed_list.index(embed_list[current])) + 1}/{len(embed_list)}",
+                        id="cur",
+                        style=ButtonStyle.grey,
+                        disabled=True
+                    ),
+                    Button(
+                        id="front",
+                        label="Forward",
+                        style=ButtonStyle.grey,
+                    )
+                ]
+            ]
+        )
+        # Infinite loop
+        while True:
+            # Try and except blocks to catch timeout and break
+            try:
+                interaction = await self.bot.wait_for(
+                    "button_click",
+                    check=lambda i: i.component.id in ["back", "front"],  # You can add more
+                    timeout=60.0
+                )
+                # Getting the right list index
+                if interaction.component.id == "back":
+                    current -= 1
+                elif interaction.component.id == "front":
+                    current += 1
+                # If its out of index, go back to start / end
+                if current == len(embed_list):
+                    current = 0
+                elif current < 0:
+                    current = len(embed_list) - 1
+
+                # Edit to new page + the center counter changes
+                await interaction.respond(
+                    type=InteractionType.UpdateMessage,
+                    embed=embed_list[current],
+                    components=[  # Use any button style you wish to :)
+                        [
+                            Button(
+                                id="back",
+                                label="Back",
+                                style=ButtonStyle.grey,
+                            ),
+                            Button(
+                                label=f"Page {int(embed_list.index(embed_list[current])) + 1}/{len(embed_list)}",
+                                id="cur",
+                                style=ButtonStyle.grey,
+                                disabled=True
+                            ),
+                            Button(
+                                id="front",
+                                label="Forward",
+                                style=ButtonStyle.grey,
+                            )
+                        ]
+                    ]
+                )
+            except asyncio.TimeoutError:
+                # Disable and get outta here
+                await main_message.delete()
+                await ctx.message.delete()
+                break
 
     @commands.command()
     async def buy(self, ctx, *, item=None):
@@ -956,7 +1060,9 @@ class Economy(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 750:
-                em = discord.Embed(title="Low budget laptop purchase", description=f"{ctx.author.mention} bought **low budget laptop** for `$750`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Low budget laptop purchase",
+                                   description=f"{ctx.author.mention} bought **low budget laptop** for `$750`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("low budget laptop")
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -968,13 +1074,16 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 750}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "average laptop" in item.lower():
             if "average laptop" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 2000:
-                em = discord.Embed(title="Average laptop purchase", description=f"{ctx.author.mention} bought **average laptop** for `$2000`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Average laptop purchase",
+                                   description=f"{ctx.author.mention} bought **average laptop** for `$2000`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("average laptop")
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -986,13 +1095,16 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 2000}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "high quality laptop" in item.lower():
             if "high quality laptop" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 4500:
-                em = discord.Embed(title="High quality laptop purchase", description=f"{ctx.author.mention} bought **high quality laptop** for `$4500`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="High quality laptop purchase",
+                                   description=f"{ctx.author.mention} bought **high quality laptop** for `$4500`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("high quality laptop")
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -1004,16 +1116,21 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 4500}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "good wifi" in item.lower():
             if "good wifi router" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if "very fast wifi router" in user["inventory"]:
-                await ctx.send(random.choice(["Why would you want to buy slower wifi??", "You have better wifi, you don't need this.", "You already have better wifi."]))
+                await ctx.send(random.choice(
+                    ["Why would you want to buy slower wifi??", "You have better wifi, you don't need this.",
+                     "You already have better wifi."]))
                 return
             if user["money"] >= 1500:
-                em = discord.Embed(title="Good wifi router purchase", description=f"{ctx.author.mention} bought **good wifi router** for `$1500`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Good wifi router purchase",
+                                   description=f"{ctx.author.mention} bought **good wifi router** for `$1500`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("good wifi router")
                 try:
@@ -1029,13 +1146,16 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 1500}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "very fast wifi router" in item.lower() or "fast wifi router" in item.lower():
             if "very fast wifi router" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 4000:
-                em = discord.Embed(title="Very fast wifi router purchase", description=f"{ctx.author.mention} bought **very fast wifi router** for `$4000`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Very fast wifi router purchase",
+                                   description=f"{ctx.author.mention} bought **very fast wifi router** for `$4000`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("very fast wifi router")
                 try:
@@ -1055,13 +1175,16 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 4000}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "antivirus" in item.lower() or "anti virus" in item.lower() or "anti-virus" in item.lower():
             if "antivirus" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 500:
-                em = discord.Embed(title="Antivirus purchase", description=f"{ctx.author.mention} bought **antivirus** for `$500`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Antivirus purchase",
+                                   description=f"{ctx.author.mention} bought **antivirus** for `$500`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("antivirus")
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -1074,13 +1197,16 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 500}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "firewall" in item.lower() or "fire wall" in item.lower() or "fire-wall" in item.lower():
             if "firewall" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 750:
-                em = discord.Embed(title="Firewall purchase", description=f"{ctx.author.mention} bought **firewall** for `$750`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Firewall purchase",
+                                   description=f"{ctx.author.mention} bought **firewall** for `$750`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("firewall")
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -1093,7 +1219,8 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 500}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.", f"{ctx.author.mention} you can't afford that."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
+                                              f"{ctx.author.mention} you can't afford that."]))
         elif "old building" in item.lower():
             try:
                 company = user["company"]
@@ -1103,11 +1230,15 @@ class Economy(commands.Cog):
             if "old building" in user["company"]["building"]:
                 await ctx.send(f"{ctx.author.mention} your company already has that building.")
                 return
-            elif "medium office building" in user["company"]["building"] or "large office building" in user["company"]["building"] or "skyscraper" in user["company"]["building"]:
-                await ctx.send(f"{ctx.author.mention} why would you want to buy a worse building? You already have a {user['company']['building']}.")
+            elif "medium office building" in user["company"]["building"] or "large office building" in user["company"][
+                "building"] or "skyscraper" in user["company"]["building"]:
+                await ctx.send(
+                    f"{ctx.author.mention} why would you want to buy a worse building? You already have a {user['company']['building']}.")
                 return
             if user["money"] >= 5000:
-                em = discord.Embed(title="Old building purchase", description=f"{ctx.author.mention} bought **old building** for `$5000`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Old building purchase",
+                                   description=f"{ctx.author.mention} bought **old building** for `$5000`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "old building"
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
@@ -1119,7 +1250,8 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 5000}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.", f"{ctx.author.mention} you can't afford it."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
+                                              f"{ctx.author.mention} you can't afford it."]))
         elif "medium office building" in item.lower() or "medium building" in item.lower():
             try:
                 company = user["company"]
@@ -1130,10 +1262,13 @@ class Economy(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} your company already has that building.")
                 return
             elif "large office building" in user["company"]["building"] or "skyscraper" in user["company"]["building"]:
-                await ctx.send(f"{ctx.author.mention} why would you want to buy a worse building? You already have a {user['company']['building']}.")
+                await ctx.send(
+                    f"{ctx.author.mention} why would you want to buy a worse building? You already have a {user['company']['building']}.")
                 return
             if user["money"] >= 10000:
-                em = discord.Embed(title="Medium office building purchase", description=f"{ctx.author.mention} bought **medium office building** for `$10000`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Medium office building purchase",
+                                   description=f"{ctx.author.mention} bought **medium office building** for `$10000`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "medium office building"
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
@@ -1145,7 +1280,8 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 10000}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.", f"{ctx.author.mention} you can't afford it."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
+                                              f"{ctx.author.mention} you can't afford it."]))
         elif "large office building" in item.lower() or "large building" in item.lower():
             try:
                 company = user["company"]
@@ -1156,10 +1292,13 @@ class Economy(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} your company already has that building.")
                 return
             elif "skyscraper" in user["company"]["building"]:
-                await ctx.send(f"{ctx.author.mention} why would you want to buy a worse building? You already have a {user['company']['building']}.")
+                await ctx.send(
+                    f"{ctx.author.mention} why would you want to buy a worse building? You already have a {user['company']['building']}.")
                 return
             if user["money"] >= 17500:
-                em = discord.Embed(title="Large office building purchase", description=f"{ctx.author.mention} bought **large office building** for `$17500`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Large office building purchase",
+                                   description=f"{ctx.author.mention} bought **large office building** for `$17500`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "large office building"
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
@@ -1171,7 +1310,8 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 17500}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.", f"{ctx.author.mention} you can't afford it."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
+                                              f"{ctx.author.mention} you can't afford it."]))
         elif "skyscraper" in item.lower() or "sky scraper" in item.lower() or "skyscrapper" in item.lower():
             try:
                 company = user["company"]
@@ -1182,7 +1322,9 @@ class Economy(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} your company already has that building.")
                 return
             if user["money"] >= 30000:
-                em = discord.Embed(title="Skyscraper purchase", description=f"{ctx.author.mention} bought **skyscraper** for `$30000`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Skyscraper purchase",
+                                   description=f"{ctx.author.mention} bought **skyscraper** for `$30000`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "skyscraper"
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
@@ -1194,10 +1336,13 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 30000}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.", f"{ctx.author.mention} you can't afford it."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
+                                              f"{ctx.author.mention} you can't afford it."]))
         elif "apple" in item.lower():
             if user["money"] >= 10000:
-                em = discord.Embed(title="Apple purchase", description=f"{ctx.author.mention} bought **apple** for `$10000`", color=discord.Colour.from_rgb(255, 248, 0))
+                em = discord.Embed(title="Apple purchase",
+                                   description=f"{ctx.author.mention} bought **apple** for `$10000`",
+                                   color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("apple")
                 collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -1209,9 +1354,11 @@ class Economy(commands.Cog):
                     collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 10000}})
                 await ctx.send(embed=em)
             else:
-                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.", f"{ctx.author.mention} you can't afford it."]))
+                await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
+                                              f"{ctx.author.mention} you can't afford it."]))
         else:
-            lst = ["low budget laptop", "average laptop", "high quality laptop", "apple", "antivirus", "firewall", "skyscraper", "large office building", "medium office building", "old building"]
+            lst = ["low budget laptop", "average laptop", "high quality laptop", "apple", "antivirus", "firewall",
+                   "skyscraper", "large office building", "medium office building", "old building"]
             item = ctx.message.content
             match = difflib.get_close_matches(item, lst, n=1)
 
@@ -1275,7 +1422,8 @@ class Economy(commands.Cog):
         if ctx.author == member:
             await ctx.send("You can't hack yourself...")
             return
-        if "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"] and "low budget laptop" not in user["inventory"]:
+        if "average laptop" not in user["inventory"] and "high quality laptop" not in user[
+            "inventory"] and "low budget laptop" not in user["inventory"]:
             await ctx.send("You need to have laptop to hack, either average or high quality.")
             return
         elif "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"]:
@@ -1328,7 +1476,8 @@ class Economy(commands.Cog):
                                               description=desc)
                         embed.set_author(icon_url=ctx.author.avatar_url, name="Hacker")
                         await msg.edit(content=":x: Hack failed!")
-                        await ctx.send(f"You lost **${payout}** for trying to hack {member.name}#{member.discriminator}")
+                        await ctx.send(
+                            f"You lost **${payout}** for trying to hack {member.name}#{member.discriminator}")
                         await member.send(embed=embed)
                     else:
                         collection.update_one({"_id": member.id}, {"$set": {"money": member_db["money"] - payout}})
@@ -1473,7 +1622,8 @@ class Economy(commands.Cog):
     @give.error
     async def give_error(self, ctx, error):
         if isinstance(error, commands.BadArgument) or isinstance(error, commands.MemberNotFound):
-            await ctx.send("You must specify a discord.Member object and an amount as an integer. `give @SomeGuy 100` or `give 123456789 100`\nYou can also add a message at the end: `give @Carl 150 take some money!`")
+            await ctx.send(
+                "You must specify a discord.Member object and an amount as an integer. `give @SomeGuy 100` or `give 123456789 100`\nYou can also add a message at the end: `give @Carl 150 take some money!`")
             return
 
     @use.error
@@ -1493,6 +1643,7 @@ class Economy(commands.Cog):
     async def economy_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You are missing the `manage_messages` permission to use this command.")
+
 
 def setup(bot):
     bot.add_cog(Economy(bot))
