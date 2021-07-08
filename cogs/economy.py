@@ -66,31 +66,9 @@ def item_emoji(part):
         return ""
 
 
-class Economy(commands.Cog):
+class economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.command(aliases=["economy-toggle", "economytoggle", "toggle-economy"])
-    @commands.has_permissions(manage_messages=True)
-    async def toggleeconomy(self, ctx, option: str = None):
-        guild = guilds.find_one({"_id": ctx.guild.id})
-        if option is None:
-            await ctx.send(
-                "Use this command to toggle the economy for this guild.\nUsage: `economy on` or `economy off`")
-        elif option.lower() in ["enable", "on"]:
-            if guild["economy_disabled"]:
-                guilds.update_one({"_id": ctx.guild.id}, {"$set": {"economy_disabled": False}})
-                await ctx.send("Economy has been enabled.")
-            else:
-                await ctx.send("Economy is already enabled for this guild.")
-        elif option.lower() in ["disable", "off"]:
-            if not guild["economy_disabled"]:
-                guilds.update_one({"_id": ctx.guild.id}, {"$set": {"economy_disabled": True}})
-                await ctx.send("Economy has been disabled.")
-            else:
-                await ctx.send("Economy is already disabled for this guild.")
-        else:
-            await ctx.send("That's not an option, use `on` or `off`")
 
     @commands.command()
     async def startcareer(self, ctx):
@@ -1560,6 +1538,51 @@ class Economy(commands.Cog):
                     await ctx.send(f"You stole **${payout}** from {member.name}#{member.discriminator}")
                     await member.send(embed=embed)
 
+    @commands.command()
+    async def daily(self, ctx):
+        user = collection.find_one({"_id": ctx.author.id})
+        if user is None:
+            await ctx.send("You must have a career, use `startcareer`")
+            return
+        try:
+            last_daily = datetime.datetime.strptime(user["last_daily"], "%Y-%m-%d %H:%M:%S")
+            if last_daily <= datetime.datetime.now():
+                date = datetime.datetime.now().replace(microsecond=0)
+                date += datetime.timedelta(days=1)
+                collection.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
+                collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
+                em = discord.Embed(title=f"Daily Reward for {ctx.author.name}", description=f"**$800** was placed in {ctx.author.name}'s account", color=discord.Colour.blue())
+                em.timestamp = datetime.datetime.utcnow()
+                await ctx.send(embed=em)
+            else:
+                duration = last_daily - datetime.datetime.now()
+                seconds = duration.total_seconds()
+                hours = round((seconds // 60) // 60)
+                minutes = round((seconds // 60) % 60)
+                seconds = round(seconds % 60)
+                if hours == 0 and minutes == 0:
+                    description = f"{ctx.author.mention} you already claimed your reward.\n\n You can claim it again in **{seconds} seconds.**"
+                elif hours == 0:
+                    description = f"{ctx.author.mention} you already claimed your reward.\n\n You can claim it again in **{minutes} minutes and {seconds} seconds.**"
+                elif minutes == 0:
+                    description = f"{ctx.author.mention} you already claimed your reward.\n\n You can claim it again in **{hours} hours and {seconds} seconds.**"
+                else:
+                    description = f"{ctx.author.mention} you already claimed your reward.\n\n You can claim it again in **{hours} hours, {minutes} minutes and {seconds} seconds.**"
+                em = discord.Embed(title="Daily reward cooldown",
+                                   description=description,
+                                   colour=discord.Colour.dark_red())
+                await ctx.send(embed=em)
+        except KeyError:
+            date = datetime.datetime.now().replace(microsecond=0)
+            date += datetime.timedelta(days=1)
+            collection.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
+            collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
+            em = discord.Embed(title=f"Daily Reward for {ctx.author.name}",
+                               description=f"**$800** was placed in {ctx.author.name}'s account", color=discord.Colour.blue())
+            em.timestamp = datetime.datetime.utcnow()
+            await ctx.send(embed=em)
+            return
+
     @hack.error
     async def hack_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
@@ -1595,14 +1618,8 @@ class Economy(commands.Cog):
             return
         raise error
 
-    @toggleeconomy.error
-    async def economy_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You are missing the `manage_messages` permission to use this command.")
-
-
 def setup(bot):
-    bot.add_cog(Economy(bot))
+    bot.add_cog(economy(bot))
 
 #     @commands.command(aliases=["ranks", "rank", "lb", "leaderboards"])
 #     async def leaderboard(self, ctx, t=None):

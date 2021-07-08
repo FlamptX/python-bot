@@ -14,7 +14,7 @@ cluster = MongoClient(MONGO_URI)
 db = cluster['python-bot']
 collection = db['guilds']
 
-class Coding(commands.Cog):
+class coding(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -320,4 +320,4 @@ class Coding(commands.Cog):
             pass
 
 def setup(bot):
-    bot.add_cog(Coding(bot))
+    bot.add_cog(coding(bot))

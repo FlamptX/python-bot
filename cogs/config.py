@@ -14,11 +14,11 @@ collection = db['guilds']
 
 emojis = ["✅", "❌"]
 
-class SettingsCog(commands.Cog):
+class config(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["changepref", "changeprefixes"])
+    @commands.command(aliases=["changepref", "changeprefixes"], help="Change the server prefix.", description="prefix (Required): The new prefix", usage="changeprefix <prefix>")
     @commands.has_permissions(manage_messages=True)
     async def changeprefix(self, ctx, prefix):
 
@@ -55,7 +55,7 @@ class SettingsCog(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} Prompt canceled due to no response.")
                 break
 
-    @commands.command(aliases=["defaultpref", "defaultprefixes"])
+    @commands.command(aliases=["defaultpref", "defaultprefixes"], help="Set the default prefix which is `py`", description="This command takes no arguments.", usage="defaultprefix")
     @commands.has_permissions(manage_messages=True)
     async def defaultprefix(self, ctx):
         msg = await ctx.send(
@@ -91,9 +91,8 @@ class SettingsCog(commands.Cog):
                 break
 
     @commands.command(hidden=True)
+    @commands.is_owner()
     async def getcommand(self, ctx, arg):
-        if ctx.author.id != 621309926631014410:
-            return
         if arg == "help" or arg == "error":
             await ctx.send("Command is too long to be sent.")
             return
@@ -111,6 +110,33 @@ class SettingsCog(commands.Cog):
         else:
             await ctx.send(":x:  That command either doesn't exist or you typed it incorrectly.")
 
+    @commands.command(aliases=["economy-toggle", "economytoggle", "toggle-economy"], help="Enable or disable economy in the server.", description="option (Required): It can either be `enable` or  `disable`", usage="toggleeconomy <option>")
+    @commands.has_permissions(manage_messages=True)
+    async def toggleeconomy(self, ctx, option: str = None):
+        guild = guilds.find_one({"_id": ctx.guild.id})
+        if option is None:
+            await ctx.send(
+                "Use this command to toggle the economy for this guild.\nUsage: `economy on` or `economy off`")
+        elif option.lower() in ["enable", "on"]:
+            if guild["economy_disabled"]:
+                guilds.update_one({"_id": ctx.guild.id}, {"$set": {"economy_disabled": False}})
+                await ctx.send("Economy has been enabled.")
+            else:
+                await ctx.send("Economy is already enabled for this guild.")
+        elif option.lower() in ["disable", "off"]:
+            if not guild["economy_disabled"]:
+                guilds.update_one({"_id": ctx.guild.id}, {"$set": {"economy_disabled": True}})
+                await ctx.send("Economy has been disabled.")
+            else:
+                await ctx.send("Economy is already disabled for this guild.")
+        else:
+            await ctx.send("That's not an option, use `on` or `off`")
+
+    @toggleeconomy.error
+    async def economy_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("You are missing the `manage_messages` permission to use this command.")
+
     @getcommand.error
     async def getcommand_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
@@ -125,4 +151,4 @@ class SettingsCog(commands.Cog):
         raise error
 
 def setup(bot):
-    bot.add_cog(SettingsCog(bot))
+    bot.add_cog(config(bot))

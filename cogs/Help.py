@@ -12,150 +12,118 @@ db = cluster['python-bot']
 collection = db['guilds']
 users = db['users']
 
+
+class CustomHelpCommand(commands.MinimalHelpCommand):
+    '''
+    Custom Help command.
+    This is subclass of commands.MinimalHelpCommand.
+    '''
+
+    def __init__(self):
+        super().__init__()
+
+    def parse_cogname(self, cog):
+        names = {
+            'python': ':snake: Python',
+            'economy': ':money_with_wings: Economy',
+            'config': ':gear: Config',
+            'coding': ':keyboard: Code channel',
+            'other': ':newspaper: Other'
+        }
+        return names[cog.qualified_name]
+
+    async def send_cog_help(self, cog):
+        channel = self.get_destination()
+        cmds = cog.get_commands()
+
+        embed = discord.Embed(title=self.parse_cogname(cog), description=cog.description, color=4879080)
+        embed.add_field(name="Commands", value=', '.join(['`' + command.name + '`' for command in cmds]))
+        embed.add_field(name="More info", value="For more information on a command, use `help <command>` command.",
+                        inline=False)
+        await channel.send(embed=embed)
+
+    async def send_group_help(self, group):
+        '''
+        Sends the help message for a commands.Group object. (Or a command group).
+        This embed basically leads the user to use the main group command for more information.
+        '''
+        channel = self.get_destination()
+        embed = discord.Embed(
+            title=group.name,
+            description=group.help,
+            color=4879080
+        )
+
+        embed.add_field(name="Commands", value='\n'.join(
+            ['`' + group.name + ' ' + command.name + '`' for command in group.commands]
+        ))
+        embed.add_field(name="More Help",
+                        value=f"For information about a command use: `py help {group.name} <command>`",
+                        inline=False)
+        await channel.send(embed=embed)
+
+    async def send_bot_help(self, mapping):
+        channel = self.get_destination()
+        embed = discord.Embed(
+            title=":question: Help Page",
+            description="List of all the categories. Use command for the respective category to get list of commands of that specific category.",
+            color=4879080
+        )
+
+        if isinstance(self.context.bot.prefix_cache[self.context.guild.id], list):
+            prefix = self.context.bot.prefix_cache[self.context.guild.id][0]
+        else:
+            prefix = self.context.bot.prefixes_cache[self.context.guild.id]
+        for key in mapping:
+            if key is None:
+                pass
+            elif key.qualified_name in ['Admin', 'Help', 'StackOverflow', 'TopGG', 'Webserver']:
+                pass
+            else:
+                embed.add_field(
+                    name=self.parse_cogname(key),
+                    value='`{}help {}`'.format(prefix, key.qualified_name),
+                    inline=True)
+        await channel.send(embed=embed)
+
+    async def send_command_help(self, command):
+        '''
+        Sends the help message about a certain command.
+        [i] command.help.split(||)[1] is the required permissions if applicable.
+        [i] command.description is the arguments help.
+        [i] command.usage is the command's usage.
+        '''
+
+        channel = self.get_destination()
+        embed = discord.Embed(
+            title='`' + command.usage + '`',
+            description=command.help if '||' not in command.help else command.help.split('||')[0],
+            color=4879080
+        )
+
+        embed.add_field(name="Arguments",
+                        value=command.description, inline=False)
+
+        embed.add_field(name="Required Permissions",
+                        value='No special permissions required.' if '||' not in command.help else
+                        command.help.split('||')[1], inline=False)
+
+        embed.add_field(name="Aliases ({})".format(len(command.aliases)),
+                        value=', '.join(command.aliases) if len(command.aliases) else 'No aliases', inline=False)
+
+        embed.set_footer(
+            text='Arguments in <> are required and arguments in [] are optional. Don\'t literally type <> or [].')
+        await channel.send(embed=embed)
+
 class Help(commands.Cog):
+    '''
+    This cog has the help command for bot.
+    '''
     def __init__(self, bot):
         self.bot = bot
+        self.bot.help_command = CustomHelpCommand()
 
-    def get_prefix(self, message):
-        if not message.guild:
-            return
-        id = message.guild.id
-        pref = collection.find_one({"_id": id})
-        post = {"_id": id, "prefix": ["py ", "PY ", "Py ", "pY "]}
-        if pref is None:
-            collection.insert_one(post)
-            return ["py ", "PY ", "Py ", "pY "]
-        else:
-            return pref['prefix']
-
-    @commands.group(invoke_without_command=True)
-    async def help(self, ctx):
-        if ctx.invoked_subcommand is None:
-            embed_var = discord.Embed(title="Help",
-                                      description=":money_with_wings: **Economy**\n`career`, `work`, `shop`, `buy`, `sell`, `hack`, `inventory`, `give`, `daily`, `startcareer`, `quit`, `company`, `startcompany`, `shutdowncompany`\nDetailed: `py help economy`\n\n:snake: **Python**\n`eval`, `docs`, `tutorials`, `error`, `pypi`, `info`, `codechannel`\n\n:gear: **Config**\n`toggleeconomy`, `changeprefix`, `defaultprefix`\n\n:newspaper: **Other**\n`suggest`, `about`, `invite`, `ping`\n\nFor information about each command use `py help {command}`",
-                                      color=int("0x36393f", 16))
-            await ctx.send(embed=embed_var)
-        elif ctx.invoked_subcommand not in ["economy", "eval", "toggleeconomy", "evaluation", "codechannel", "tutorials", "pypi", "error", "ping", "changeprefix", "defaultprefix", "about", "info", "suggest", "docs"]:
-            embed_var = discord.Embed(title="Command not found",
-                                      description=":x:   Make sure that the command exists and that you spelled it right.",
-                                      color=int("0x36393f", 16))
-            await ctx.send(embed=embed_var)
-
-    @help.command(aliases=["shop", "company", "sell", "buy", "bal", "inv", "inventory", "balance", "shutdowncompany", "work", "daily"])
-    async def economy_commands(self, ctx):
-        await self.economy(ctx)
-
-    @help.command()
-    async def economy(self, ctx):
-        embed_var = discord.Embed(title="Economy",
-                                  description=f"Start a career with `py startcareer`.\n\nEarn money by working and leveling up.\nAt levels `3`, `7`, `15` and `25` you will get a better job.\nYour working payout depends on your job. You need to have a laptop to work. Laptops have a small chance to break, a wifi router will reduce the work cooldown.\n\nWhen you reach level 7, you can start a company that can grow big and earn you even more money than a normal job.\n\nVote for the bot on **[top.gg](https://top.gg/bot/800832309989081118/vote)** to get a reward of **$1000**\n\n**Commands:**\n`daily` - claim a reward of $800 every 24 hours\n`career` - see your balance, job and level\n`work` - earn money\n`shop` - buy better equipment\n`buy` - from the shop\n`sell` - your items\n`hack` - steal other users money\n`use` - use an item you bought\n`give` - send money to other members\n`inventory` - see what items you own\n`startcareer`\n`retire` - delete your career data\n`startcompany`\n`shutdowncompany`\n`company`\n\nUsers playing: {users.find({}).count()}",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command(aliases=["evaluation"])
-    async def eval(self, ctx):
-        embed_var = discord.Embed(title="Eval Command",
-                                  description="Execute python code and get the output.\n The code is sandboxed by removing specific modules and keywords.\n\nCorrect usage: `py eval <code here>`",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def toggleeconomy(self, ctx):
-        embed_var = discord.Embed(title="Toggle Economy Command",
-                                  description="Disable or enable economy for this guild.\n\nEnable - `toggleeconomy on`\nDisable - `toggleeconomy off`",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def codechannel(self, ctx):
-        embed_var = discord.Embed(title="Code channel Command",
-                                  description="Start a coding channel with `cc init`\n\nWhen you did, anyone can just send something in that channel and it will be added to the code in the bots messsage.\n`cc` is a shortcut for `codechannel` but you can use any of those.\n`cc delete` will delete an amount of last lines in the code.\n`cc status` shows if the coding channel is receiving messages. Use `cc start` or `cc stop` to change it.\n\nCommands: `cc init`, `cc delete`, `cc status`, `cc start`, `cc stop`",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def tutorials(self, ctx):
-        embed_var = discord.Embed(title="Tutorials Command",
-                                  description="Learn about basic or intermediate things in python.\nYou can learn about variables, data types, loops and more or intermediate things like using json in python, datetime and more.\n\nYou can see definitions and examples of everything.\n\nAll information is from W3Schools.",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def pypi(self, ctx):
-        embed_var = discord.Embed(title="PyPi Command",
-                                  description="Get information about packages from [PyPi](https://pypi.org).\n\nCorrect usage: `py pypi <package>`",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def error(self, ctx):
-        embed_var = discord.Embed(title="Error Command",
-                                  description="It is used to get information about common python errors. \n You can use it by typing `py error syntax` for ex. \n \n There are **8** common errors you can get information about. \n `syntax` \n `index` \n `module` \n `key` \n `type` \n `value` \n `name` \n `unicode`",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def ping(self, ctx):
-        embed_var = discord.Embed(title="Ping Command",
-                                  description="Shows how much time the bot needs to respond (in milliseconds).",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def changeprefix(self, ctx):
-         embed_var = discord.Embed(title="Changeprefix Command",
-                                   description="Changes the bot prefix of the server. \n\n Correct usage: `py changeprefix <new prefix>`",
-                                   color=int("0x36393f", 16))
-         await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def defaultprefix(self, ctx):
-         embed_var = discord.Embed(title="Defaultprefix Command",
-                                   description="Sets the default bot prefix of the server which is `py`. \n The default prefix is case insensitive. Custom prefixes set by `changeprefix` are not case insensitive.",
-                                   color=int("0x36393f", 16))
-         await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def about(self, ctx):
-        embed_var = discord.Embed(title="About Command",
-                                  description="Python version that the bot uses, discord.py version, ping, host, amount of servers the bot is in and the amount of commands",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def info(self, ctx):
-        embed_var = discord.Embed(title="Info Command",
-                                  description="Links and info about python.",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def invite(self, ctx):
-        embed_var = discord.Embed(title="Invite Command",
-                                  description="Bot invite link, support server and the website link.",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command()
-    async def suggest(self, ctx):
-        embed_var = discord.Embed(title="Suggest Command",
-                                  description="Make a suggestion for the bot, it can be a feature, issue or anything.",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command(aliases=["stackoverflow", "stack", "question"])
-    async def questions(self, ctx):
-        embed_var = discord.Embed(title="Discord Stackoverflow",
-                                  description="You can create questions for help with your code or to ask something.\nBefore that you need to make a profile with `createprofile`\n\nIf you want to create a new question, go to <#841398524208873492>\n\nAnswering, commenting, marking answers as the solution and getting answers marked as the solution will give you points.\nAt certain amounts of points you will get a new rank and a role.\n\nTo comment a question use `py comment <text>`\nTo answer use `py answer <text>`\nIf you want to make someone answer as a solution you can react to with it :white_check_mark: or use `py solution <answer id>`\nTo close your question use `py delete`",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
-
-    @help.command(aliases=['documentation', 'doc'])
-    async def docs(self, ctx):
-        embed_var = discord.Embed(title="Documentation Command",
-                                  description="Get documentation links for python or discord.py.\n\nPython documentation: `py docs <name>`\nDiscord.py documentation: `py docs dpy <name>`\nThe name is what you want to get the link for.",
-                                  color=int("0x36393f", 16))
-        await ctx.send(embed=embed_var)
+# f"Start a career with `py startcareer`.\n\nEarn money by working and leveling up.\nAt levels `3`, `7`, `15` and `25` you will get a better job.\nYour working payout depends on your job. You need to have a laptop to work. Laptops have a small chance to break, a wifi router will reduce the work cooldown.\n\nWhen you reach level 7, you can start a company that can grow big and earn you even more money than a normal job.\n\nVote for the bot on **[top.gg](https://top.gg/bot/800832309989081118/vote)** to get a reward of **$1000**\n\n**Commands:**\n`daily` - claim a reward of $800 every 24 hours\n`career` - see your balance, job and level\n`work` - earn money\n`shop` - buy better equipment\n`buy` - from the shop\n`sell` - your items\n`hack` - steal other users money\n`use` - use an item you bought\n`give` - send money to other members\n`inventory` - see what items you own\n`startcareer`\n`retire` - delete your career data\n`startcompany`\n`shutdowncompany`\n`company`\n\nUsers playing: {users.find({}).count()}"
 
 def setup(bot):
     bot.add_cog(Help(bot))
