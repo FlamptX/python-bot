@@ -8,7 +8,6 @@ import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import difflib
-from bot import users as u
 
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
@@ -1422,8 +1421,7 @@ class Economy(commands.Cog):
         if ctx.author == member:
             await ctx.send("You can't hack yourself...")
             return
-        if "average laptop" not in user["inventory"] and "high quality laptop" not in user[
-            "inventory"] and "low budget laptop" not in user["inventory"]:
+        if "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"] and "low budget laptop" not in user["inventory"]:
             await ctx.send("You need to have laptop to hack, either average or high quality.")
             return
         elif "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"]:
@@ -1572,48 +1570,6 @@ class Economy(commands.Cog):
             return
         raise error
 
-    @commands.command(aliases=["ranks", "rank", "lb", "leaderboards"])
-    async def leaderboard(self, ctx, t=None):
-        return
-        msg = await ctx.send("<a:loading_pic:833966183841529916> Fetching Leaderboard...")
-        users_levels = {}
-        users_money = {}
-
-        for user in u:
-            member_exists = collection.find_one({"_id": user.id})
-            users_levels[user.id] = round(float(member_exists["level"]))
-            users_money[user.id] = member_exists["money"]
-        if t == "-l" or t == "-level":
-            users = {k: v for k, v in sorted(users_levels.items(), key=lambda item: item[1], reverse=True)}
-        elif t in ["-c", "-m", "-b", "-balance", "-cash", "-money", "-bal"]:
-            users = {k: v for k, v in sorted(users_money.items(), key=lambda item: item[1], reverse=True)}
-        else:
-            users = {k: v for k, v in sorted(users_levels.items(), key=lambda item: item[1], reverse=True)}
-        rank = 1
-        embed = discord.Embed(title="Server leaderboard | Top 10", description="", colour=discord.Color.green())
-        for x in users:
-            if ctx.author.id != x:
-                user = self.bot.get_user(x) or await self.bot.fetch_user(x)
-                embed.add_field(name=f"{rank}. {user.name}#{user.discriminator}",
-                                value=f"Level: `{users_levels[x]}` • Money: ${users_money[x]}", inline=False)
-            else:
-                user_rank = rank
-                embed.add_field(name=f"{rank}. {ctx.author.name}#{ctx.author.discriminator}",
-                                value=f"Level: `{users_levels[x]}` • Money: ${users_money[x]}", inline=False)
-            rank += 1
-        try:
-            if user_rank == 1:
-                rank_text = f"Your rank: {user_rank}st"
-            elif user_rank == 2:
-                rank_text = f"Your rank: {user_rank}nd"
-            else:
-                rank_text = f"Your rank: {user_rank}th"
-                embed.set_footer(text=rank_text)
-        except UnboundLocalError:
-            pass
-        await msg.delete()
-        await ctx.send(embed=embed)
-
     # @build.error
     # async def build_error(self, ctx, error):
     #     if isinstance(error, commands.MissingRequiredArgument):
@@ -1647,3 +1603,44 @@ class Economy(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Economy(bot))
+
+#     @commands.command(aliases=["ranks", "rank", "lb", "leaderboards"])
+#     async def leaderboard(self, ctx, t=None):
+#         msg = await ctx.send("<a:loading_pic:833966183841529916> Fetching Leaderboard...")
+#         users_levels = {}
+#         users_money = {}
+#
+#         for user in u:
+#             member_exists = collection.find_one({"_id": user.id})
+#             users_levels[user.id] = round(float(member_exists["level"]))
+#             users_money[user.id] = member_exists["money"]
+#         if t == "-l" or t == "-level":
+#             users = {k: v for k, v in sorted(users_levels.items(), key=lambda item: item[1], reverse=True)}
+#         elif t in ["-c", "-m", "-b", "-balance", "-cash", "-money", "-bal"]:
+#             users = {k: v for k, v in sorted(users_money.items(), key=lambda item: item[1], reverse=True)}
+#         else:
+#             users = {k: v for k, v in sorted(users_levels.items(), key=lambda item: item[1], reverse=True)}
+#         rank = 1
+#         embed = discord.Embed(title="Server leaderboard | Top 10", description="", colour=discord.Color.green())
+#         for x in users:
+#             if ctx.author.id != x:
+#                 user = self.bot.get_user(x) or await self.bot.fetch_user(x)
+#                 embed.add_field(name=f"{rank}. {user.name}#{user.discriminator}",
+#                                 value=f"Level: `{users_levels[x]}` • Money: ${users_money[x]}", inline=False)
+#             else:
+#                 user_rank = rank
+#                 embed.add_field(name=f"{rank}. {ctx.author.name}#{ctx.author.discriminator}",
+#                                 value=f"Level: `{users_levels[x]}` • Money: ${users_money[x]}", inline=False)
+#             rank += 1
+#         try:
+#             if user_rank == 1:
+#                 rank_text = f"Your rank: {user_rank}st"
+#             elif user_rank == 2:
+#                 rank_text = f"Your rank: {user_rank}nd"
+#             else:
+#                 rank_text = f"Your rank: {user_rank}th"
+#                 embed.set_footer(text=rank_text)
+#         except UnboundLocalError:
+#             pass
+#         await msg.delete()
+#         await ctx.send(embed=embed)
