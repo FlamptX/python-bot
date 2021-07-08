@@ -8,7 +8,7 @@ import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import difflib
-from main import users as u
+from bot import users as u
 
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
@@ -901,7 +901,7 @@ class Economy(commands.Cog):
                             await ctx.send("That's not a correct number. Minimum is 1 and maximum is 10.")
                             return
                         else:
-                            if amount <= int(msg.content):
+                            if amount < int(msg.content):
                                 await ctx.send("You don't have that many apples.")
                                 return
                             i = 0
@@ -918,7 +918,7 @@ class Economy(commands.Cog):
                                 i += 1
                             if msg.content != "1":
                                 await ctx.send(
-                                    f"You ate {i} apples and leveled up! You are now level **{user['level'][:-2]}**")
+                                    f"You ate {found} apples and leveled up! You are now level **{user['level'][:-2]}**")
                             else:
                                 await ctx.send(
                                     f"You ate an apple and leveled up! You are now level **{user['level'][:-2]}**")

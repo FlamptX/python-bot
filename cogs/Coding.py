@@ -228,5 +228,96 @@ class Coding(commands.Cog):
             except ValueError:
                 await ctx.send("That is not a number. Correct usage: `delete 2`")
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if not message.guild:
+            return
+        elif message.author.bot:
+            await self.bot.process_commands(message)
+            return
+
+        guild = collection.find_one({"_id": message.guild.id})
+
+        if guild is not None:
+            try:
+                active = guild['code_channel_active']
+            except KeyError:
+                pass
+        else:
+            await self.bot.process_commands(message)
+            return
+
+        prefix_there = message.content.startswith("py") or message.content.startswith(
+            "Py") or message.content.startswith(
+            "pY") or message.content.startswith("PY") or message.content.startswith('?')
+        try:
+            if message.channel.id == guild["code_channel"] and active and not prefix_there:
+
+                bot_member = message.guild.get_member(self.bot.user.id) or await message.guild.fetch_member(self.bot.user.id)
+                bot_perms = message.channel.permissions_for(bot_member)
+                if not bot_perms.manage_messages:
+                    await message.channel.send("I am missing the `manage_messages` permission.")
+                    await self.bot.process_commands(message)
+                    return
+
+                code = message.content
+
+                bot_msg = await message.channel.send("<a:loading_pic:833966183841529916> Adding your code...")
+
+                while "`" in code:
+                    code = code.replace("`", "")
+                if code.startswith("""
+    """):
+                    code = code[1:]
+
+                if len(code) > 100 and message.author.id != 621309926631014410:
+                    await bot_msg.delete()
+                    msg = await message.channel.send("Maximum of 100 characters per message is allowed.")
+                    await asyncio.sleep(5)
+                    await msg.delete()
+                    await message.delete()
+                    await bot.process_commands(message)
+                    return
+
+                try:
+                    global code_message
+                    if code_message is None:
+                        msg = await message.channel.fetch_message(guild['code_channel_msg_id'])
+                        code_message = msg
+                    else:
+                        msg = code_message
+                    content = msg.embeds[0].description.replace("Send anything to add it to the code.", "")
+
+                    while "`" in content:
+                        content = content.replace("`", "")
+
+                        if content.startswith("""
+    """):
+                            content = content[1:]
+
+                    if content.startswith("python"):
+                        content = content[6:]
+
+                    if 'print("Hello World!")' in content:
+                        content = ""
+
+                    embed = discord.Embed(title="Coding Channel",
+                                          description=f"```python\n{content}{code}```\nSend anything to add it to the code.",
+                                          colour=discord.Colour.from_rgb(255, 255, 0))
+
+                    await msg.edit(embed=embed)
+
+                    await bot_msg.delete()
+                    await message.delete()
+                except discord.NotFound:
+                    print(guild['code_channel_msg_id'])
+                    await bot_msg.delete()
+                    await message.channel.send(
+                        "It seems that the code message was deleted. Use `cc init` to send it again.")
+                    await self.bot.process_commands(message)
+                    return
+        except Exception:
+            pass
+
 def setup(bot):
     bot.add_cog(Coding(bot))
