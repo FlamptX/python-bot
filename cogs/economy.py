@@ -4,18 +4,7 @@ from discord_components import Button, ButtonStyle, InteractionType
 import asyncio
 import random
 import datetime
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
 import difflib
-
-load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI")
-
-cluster = MongoClient(MONGO_URI)
-db = cluster['python-bot']
-collection = db['users']
-guilds = db['guilds']
 
 jobs1 = ["discord bot developer", "computer engineer at a small tech company",
          "hosting service provider"]
@@ -65,19 +54,18 @@ def item_emoji(part):
     else:
         return ""
 
-
 class economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(help="Start an economy game career.", description="This command takes no arguments.", usage="startcareer")
     async def startcareer(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
         try:
-            collection.insert_one({"_id": ctx.author.id, "level": "1.0", "money": 100, "job": "freelancer",
-                                   "inventory": ["low budget laptop", "slow wifi router"], "antivirus_work": 0})
+            self.bot.user_db.insert_one({"_id": ctx.author.id, "level": "1.0", "money": 100, "job": "freelancer",
+                                         "inventory": ["low budget laptop", "slow wifi router"], "antivirus_work": 0})
         except Exception:
             await ctx.send(
                 f"{ctx.author.mention} you already have a career. If you want to quit use `quit`")
@@ -87,10 +75,10 @@ class economy(commands.Cog):
 
     @commands.command(help="Quit your economy game job.", description="This command takes no arguments.", usage="quit")
     async def quit(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You haven't started your career. Use `startcareer`")
         else:
@@ -99,16 +87,16 @@ class economy(commands.Cog):
             elif user["job"] == "Not hired":
                 await ctx.send("You don't have a job.")
             else:
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
                 await ctx.send(
                     f"{ctx.author.mention} you have quit your job. If you want to get a new job use `findjob`")
 
     @commands.command(help="Find a new economy game job.", description="This command takes no arguments.", usage="findjob")
     async def findjob(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -117,29 +105,29 @@ class economy(commands.Cog):
             return
         if float(user["level"]) < 3.0:
             await ctx.send("You can only be a freelancer at this level.")
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "freelancer"}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": "freelancer"}})
             return
         elif 3.0 <= float(user["level"]) < 7.0:
             job = random.choice(jobs1)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
         elif 7.0 <= float(user["level"]) < 15.0:
             job = random.choice(jobs2)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
         elif 15.0 <= float(user["level"]) < 25.0:
             job = random.choice(jobs3)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
         else:
             job = random.choice(jobs4)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
         await ctx.send(f"You now work as a {job}.")
 
     @commands.command(aliases=["bal", "balance"], help="See your economy game career.", description="member (Optional): Include to see someone else's career.", usage="career [member]")
     async def career(self, ctx, member: discord.Member = None):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
         if member is None:
-            user = collection.find_one({"_id": ctx.author.id})
+            user = self.bot.user_db.find_one({"_id": ctx.author.id})
             if user is None:
                 await ctx.send("You must have a career, use `startcareer`")
                 return
@@ -190,7 +178,7 @@ class economy(commands.Cog):
             em.set_thumbnail(url=ctx.author.avatar_url)
             await ctx.send(embed=em)
         else:
-            user = collection.find_one({"_id": member.id})
+            user = self.bot.user_db.find_one({"_id": member.id})
             if user is None:
                 await ctx.send("That user doesn't have a career.")
                 return
@@ -245,24 +233,24 @@ class economy(commands.Cog):
     @commands.is_owner()
     async def addmoney(self, ctx, member: discord.Member, money):
         if member:
-            user = collection.find_one({"_id": member.id})
+            user = self.bot.user_db.find_one({"_id": member.id})
             if user is None:
                 await ctx.send("That user doesn't have a career.")
                 return
         else:
-            user = collection.find_one({"_id": ctx.author.id})
+            user = self.bot.user_db.find_one({"_id": ctx.author.id})
             if user is None:
                 await ctx.send("You must have a career, use `startcareer`")
                 return
-        collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + int(money)}})
+        self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + int(money)}})
         await ctx.send(f"Added ${money} to {member.name}#{member.discriminator}")
 
     @commands.command(help="Earn money in the economy game.", description="This command takes no arguments.", usage="work")
     async def work(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -302,7 +290,7 @@ class economy(commands.Cog):
             date += datetime.timedelta(minutes=8)
         else:
             date += datetime.timedelta(minutes=15)
-        collection.update_one({"_id": ctx.author.id},
+        self.bot.user_db.update_one({"_id": ctx.author.id},
                               {"$set": {"last_work": str(date)}})
 
         if ctx.channel.id == 831462745316392990:
@@ -335,7 +323,7 @@ class economy(commands.Cog):
                  f"{ctx.author.mention} you don't have a laptop. Buy one.",
                  f"{ctx.author.mention} buy a laptop to work."]))
             date = datetime.datetime.now().replace(microsecond=0)
-            collection.update_one({"_id": ctx.author.id},
+            self.bot.user_db.update_one({"_id": ctx.author.id},
                                   {"$set": {"last_work": str(date)}})
             return
 
@@ -353,28 +341,28 @@ class economy(commands.Cog):
                 f"{ctx.author.mention} your laptop and wifi router just broke! You can't work until you buy a new laptop.")
             inventory = user["inventory"]
             inventory.remove(remove)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             date = datetime.datetime.now().replace(microsecond=0)
-            collection.update_one({"_id": ctx.author.id},
+            self.bot.user_db.update_one({"_id": ctx.author.id},
                                   {"$set": {"last_work": str(date)}})
             inventory = user["inventory"]
             # noinspection PyUnboundLocalVariable
             inventory.remove(remove_router)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             return
         elif break_router:
             await ctx.send(f"{ctx.author.mention} your wifi router just broke!")
             inventory = user["inventory"]
             # noinspection PyUnboundLocalVariable
             inventory.remove(remove_router)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
         elif break_laptop:
             await ctx.send(f"{ctx.author.mention} your laptop just broke! You can't work until you buy a new one.")
             inventory = user["inventory"]
             inventory.remove(remove)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             date = datetime.datetime.now().replace(microsecond=0)
-            collection.update_one({"_id": ctx.author.id},
+            self.bot.user_db.update_one({"_id": ctx.author.id},
                                   {"$set": {"last_work": str(date)}})
             return
 
@@ -382,22 +370,22 @@ class economy(commands.Cog):
             msg = random.choice(["When will you buy that antivirus?", "You should buy an antivirus.",
                                  "Buy an antivirus to prevent this."])
             await ctx.send(f"**VIRUS!**\n{ctx.author.name} you just lost $250 because of a virus. {msg}")
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 250}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 250}})
         try:
             if user["antivirus_work"] >= 12 and "antivirus" in user["inventory"]:
                 await ctx.send(f"**{ctx.author.name} your antivirus just expired, you should buy it again.**")
                 inventory = user["inventory"]
                 inventory.remove("antivirus")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
         except KeyError:
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": 1}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": 1}})
 
         if random.randint(1, 100) <= 20:
             inventory = user["inventory"]
             if user['job'] in jobs1:
                 part = random.choice(parts1)
                 inventory.append(part)
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 emoji = item_emoji(part)
                 await ctx.send(random.choice([f"You accidentally found a **{emoji} {part}**.",
                                               f"You stole a **{emoji} {part}** from the storage.",
@@ -406,7 +394,7 @@ class economy(commands.Cog):
             elif user['job'] in jobs2:
                 part = random.choice(["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "psu"])
                 inventory.append(part)
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 emoji = item_emoji(part)
                 await ctx.send(random.choice([f"You accidentally found a **{emoji} {part}**.",
                                               f"You stole a **{emoji} {part}** from the storage.",
@@ -417,7 +405,7 @@ class economy(commands.Cog):
                     ["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "water cooler tank",
                      "water cooler pipe", "ssd", "psu"])
                 inventory.append(part)
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 emoji = item_emoji(part)
                 await ctx.send(random.choice([f"You accidentally found a **{emoji} {part}**.",
                                               f"You stole a **{emoji} {part}** from the storage.",
@@ -428,7 +416,7 @@ class economy(commands.Cog):
                     ["cable", "fan", "hard disk", "ram", "cpu", "motherboard", "graphics card", "water cooler tank",
                      "water cooler pipe", "ssd", "apple", "psu"])
                 inventory.append(part)
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 emoji = item_emoji(part)
                 await ctx.send(random.choice([f"You accidentally found a **{emoji} {part}**.",
                                               f"You stole a **{emoji} {part}** from the storage.",
@@ -442,35 +430,35 @@ class economy(commands.Cog):
             level_bonus = False
         try:
             if "antivirus" in user["inventory"]:
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": user["antivirus_work"] + 1}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": user["antivirus_work"] + 1}})
         except KeyError:
             pass
         if level_bonus:  # Check level bonus
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
             level = user['level']
             new_level = round(float(level) + 0.1, 1)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
             if str(new_level)[-1:] == "0":  # Check level up
                 if int(str(new_level)[:-2]) == 3:  # Level up and new job
                     new_job = random.choice(jobs1)
                     await ctx.send(
                         f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 elif int(str(new_level)[:-2]) == 7:
                     new_job = random.choice(jobs2)
                     await ctx.send(
                         f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 elif int(str(new_level)[:-2]) == 15:
                     new_job = random.choice(jobs3)
                     await ctx.send(
                         f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 elif int(str(new_level)[:-2]) == 25:
                     new_job = random.choice(jobs4)
                     await ctx.send(
                         f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]} and work as a {new_job}!**")
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": new_job}})
                 else:  # Level up
                     await ctx.send(
                         f"{ctx.author.mention} You worked and earned **${payout}**.\n**LEVEL UP, you are now level {str(new_level)[:-2]}!**")
@@ -478,11 +466,11 @@ class economy(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.")
         else:  # No level bonus
             await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.")
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
 
     @commands.command(help="Sell an item you found.", description="item (Required): The item you want to sell.", usage="sell <item>")
     async def sell(self, ctx, *, item):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
         if item is None:
@@ -498,7 +486,7 @@ class economy(commands.Cog):
             item = "water cooler tank"
         elif item == "pipe" or item == "cooler pipe":
             item = "water cooler pipe"
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -513,61 +501,61 @@ class economy(commands.Cog):
             if item == "cable":
                 price = random.randint(50, 75)
                 inventory.remove("cable")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "fan":
                 price = fan_price
                 inventory.remove("fan")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "hard disk" or item == "harddisk":
                 price = harddisk_price
                 inventory.remove("hard disk")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "ram":
                 price = ram_price
                 inventory.remove("ram")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "cpu":
                 price = cpu_price
                 inventory.remove("cpu")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "motherboard":
                 price = motherboard_price
                 inventory.remove("motherboard")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "graphics card":
                 price = graphicscard_price
                 inventory.remove("graphics card")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "ssd":
                 price = ssd_price
                 inventory.remove("ssd")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "water cooler tank":
                 price = tank_price
                 inventory.remove("water cooler tank")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "water cooler pipe":
                 price = pipe_price
                 inventory.remove("water cooler pipe")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "psu" or item == "power":
                 price = psu_price
                 inventory.remove("psu")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             else:
                 await ctx.send("Something went wrong.")
                 return
 
             emoji = item_emoji(item)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + price}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + price}})
             await ctx.send(f"You sold your **{emoji} {item}** for **${price}**.")
 
     @commands.command(help="Start an economy game company.", description="name (Required): Name your company.", usage="startcompany")
     async def startcompany(self, ctx, name=None):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -588,18 +576,18 @@ class economy(commands.Cog):
             if name is None:
                 await ctx.send("You must pick a name for the company.\nExample: `startcompany google`")
             else:
-                collection.update_one({"_id": ctx.author.id},
+                self.bot.user_db.update_one({"_id": ctx.author.id},
                                       {"$set": {"company": {"name": name, "workers": 0, "building": "None"}}})
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Company Owner"}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": "Company Owner"}})
                 await ctx.send(
                     f"{ctx.author.mention} you have started a tech company called **{name}**. Grow your business by hiring workers, advertising and buying better equipment.\nFor more information use `help company`")
 
     @commands.command(help="Delete your economy game company and all it's worth.", description="This command takes no arguments.", usage="shutdowncompany")
     async def shutdowncompany(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -623,8 +611,8 @@ class economy(commands.Cog):
                 await res.respond(type=7,
                                   content=f"{ctx.author.mention} you no longer own **{user['company']['name']}**.",
                                   components=[])
-                collection.update_one({"_id": ctx.author.id}, {"$unset": {"company": ""}})
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$unset": {"company": ""}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": "Not hired"}})
             elif res.component.label == "No" and res.message.id == msg.id and res.user.id == ctx.author.id:
                 await res.respond(type=7, content="Canceled.", components=[])
                 return
@@ -633,10 +621,10 @@ class economy(commands.Cog):
 
     @commands.command(help="See your economy game company.", description="This command takes no arguments.", usage="company")
     async def company(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -653,10 +641,10 @@ class economy(commands.Cog):
 
     @commands.command(aliases=["inv"], help="See your economy game inventory.", description="This command takes no arguments.", usage="inventory")
     async def inventory(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -853,10 +841,10 @@ class economy(commands.Cog):
 
     @commands.command(help="Use an item you own.", description="item (Required): The item you want to use.", usage="use <item>")
     async def use(self, ctx, item):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -888,9 +876,9 @@ class economy(commands.Cog):
                                 if item == "apple" and found <= amount:
                                     del inventory[i]
                                     user["level"] = str(float(user["level"]) + 1)
-                                    collection.update_one({"_id": ctx.author.id},
+                                    self.bot.user_db.update_one({"_id": ctx.author.id},
                                                           {"$set": {"level": user["level"]}})
-                                    collection.update_one({"_id": ctx.author.id},
+                                    self.bot.user_db.update_one({"_id": ctx.author.id},
                                                           {"$set": {"inventory": inventory}})
                                     found += 1
                                 i += 1
@@ -905,11 +893,11 @@ class economy(commands.Cog):
                         return
                 elif amount == 1:
                     user["level"] = str(float(user["level"]) + 1)
-                    collection.update_one({"_id": ctx.author.id},
+                    self.bot.user_db.update_one({"_id": ctx.author.id},
                                           {"$set": {"level": user["level"]}})
                     inventory = user["inventory"]
                     inventory.remove("apple")
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                     await ctx.send(f"You ate an apple and leveled up! You are now level **{str(user['level'])[:-2]}**")
                 else:
                     await ctx.send("Invalid number.")
@@ -917,13 +905,13 @@ class economy(commands.Cog):
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
             else:
                 await ctx.send("You don't have that item.")
 
     @commands.command(help="See the economy game shop.", description="This command takes no arguments.", usage="shop")
     async def shop(self, ctx):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
 
@@ -1022,10 +1010,10 @@ class economy(commands.Cog):
 
     @commands.command(help="Buy an item from the economy game shop.", description="item (Required): Item to buy.", usage="buy <item>")
     async def buy(self, ctx, *, item=None):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -1043,13 +1031,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("low budget laptop")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 750}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 750}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1064,13 +1052,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("average laptop")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 2000}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 2000}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1085,13 +1073,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("high quality laptop")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 4500}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 4500}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1115,13 +1103,13 @@ class economy(commands.Cog):
                     inventory.remove("slow wifi router")
                 except ValueError:
                     pass
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 1500}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 1500}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1144,13 +1132,13 @@ class economy(commands.Cog):
                     inventory.remove("good wifi router")
                 except ValueError:
                     pass
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 4000}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 4000}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1165,14 +1153,14 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("antivirus")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": 1}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": 1}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 500}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 500}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1187,14 +1175,14 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("firewall")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"firewall_uses": 5}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"firewall_uses": 5}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 500}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 500}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
@@ -1219,13 +1207,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "old building"
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 5000}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 5000}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
@@ -1249,13 +1237,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "medium office building"
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 10000}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 10000}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
@@ -1279,13 +1267,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "large office building"
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 17500}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 17500}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
@@ -1305,13 +1293,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 company["building"] = "skyscraper"
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"company": company}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 30000}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 30000}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
@@ -1323,13 +1311,13 @@ class economy(commands.Cog):
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
                 inventory.append("apple")
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
                     new_level = round(float(level) + 0.1, 1)
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"level": str(new_level)}})
                 if ctx.channel.id != 831462745316392990:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 10000}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - 10000}})
                 await ctx.send(embed=em)
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
@@ -1348,10 +1336,10 @@ class economy(commands.Cog):
 
     @commands.command(help="Give another member money in the economy game.", description="member (Required): User to give money to.\namount (Required): The amount of **$** you want to give them.\nmessage (Optional): A message with the money..", usage="give <member> <amount> [message]")
     async def give(self, ctx, member: discord.Member, amount: int, *, message):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -1363,7 +1351,7 @@ class economy(commands.Cog):
             await ctx.send("You can't give money to yourself.")
             return
 
-        user2 = collection.find_one({"_id": member.id})
+        user2 = self.bot.user_db.find_one({"_id": member.id})
         if user2 is None:
             await ctx.send("That user doesn't have a career.")
             return
@@ -1375,20 +1363,20 @@ class economy(commands.Cog):
         if message is None:
             message = ""
         await ctx.send(f"You gave ${amount} to {member.name}.")
-        collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - amount}})
-        collection.update_one({"_id": member.id}, {"$set": {"money": user2["money"] + amount}})
+        self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - amount}})
+        self.bot.user_db.update_one({"_id": member.id}, {"$set": {"money": user2["money"] + amount}})
         await member.send(f"**{ctx.author.name}#{ctx.author.discriminator}** just gave you ${amount}!\n{message}")
 
     @commands.command(help="Fake hack. Steal someones money if they don't have a firewall.", description="member (Required): The user to steal money from.", usage="hack <member>")
     async def hack(self, ctx, member: discord.Member):
-        if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
-        member_db = collection.find_one({"_id": member.id})
+        member_db = self.bot.user_db.find_one({"_id": member.id})
         if member.id == self.bot.user.id:
             await ctx.send("You can't hack me?! <:kek:832189648343531560>")
             return
@@ -1409,7 +1397,7 @@ class economy(commands.Cog):
             if last_hack <= datetime.datetime.now():
                 date = datetime.datetime.now().replace(microsecond=0)
                 date += datetime.timedelta(hours=6)
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"last_hack": str(date)}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"last_hack": str(date)}})
 
                 ip = str(random.randint(100, 999))
                 address = f"{ip}.{random.randint(1, 10)}.{random.randint(1, 10)}.{random.randint(1, 10)}"
@@ -1419,7 +1407,7 @@ class economy(commands.Cog):
                             "<a:loading_pic:833966183841529916> Stealing money..."]
                 msg = await ctx.send("Hack starting...")
                 i = 0
-                member_db = collection.find_one({"_id": member.id})
+                member_db = self.bot.user_db.find_one({"_id": member.id})
                 for message in messages:
                     await msg.edit(content=message)
                     if i == 3 and "firewall" in member_db["inventory"]:
@@ -1436,15 +1424,15 @@ class economy(commands.Cog):
                     await ctx.send("That user is too poor to be hacked.")
                 else:
                     if firewall_found:
-                        collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - payout}})
+                        self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - payout}})
                         if member_db["firewall_uses"] == 0:
                             desc = f"{ctx.author.name}#{ctx.author.discriminator} tried to hack you but your firewall stopped him.\n**Your firewall expired**"
                             inventory = member_db["inventory"]
                             inventory.remove("firewall")
-                            collection.update_one({"_id": member.id},
+                            self.bot.user_db.update_one({"_id": member.id},
                                                   {"$set": {"inventory": inventory}})
                         else:
-                            collection.update_one({"_id": member.id},
+                            self.bot.user_db.update_one({"_id": member.id},
                                                   {"$set": {"firewall_uses": member_db["firewall_uses"] - 1}})
                             desc = f"{ctx.author.name}#{ctx.author.discriminator} tried to hack you but your firewall stopped him.\nRemaining firewall uses: {member_db['firewall_uses']}"
                         embed = discord.Embed(title="Hack attempt!",
@@ -1455,8 +1443,8 @@ class economy(commands.Cog):
                             f"You lost **${payout}** for trying to hack {member.name}#{member.discriminator}")
                         await member.send(embed=embed)
                     else:
-                        collection.update_one({"_id": member.id}, {"$set": {"money": member_db["money"] - payout}})
-                        collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + payout}})
+                        self.bot.user_db.update_one({"_id": member.id}, {"$set": {"money": member_db["money"] - payout}})
+                        self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + payout}})
                         embed = discord.Embed(title="You were hacked!",
                                               description=f"{ctx.author.name}#{ctx.author.discriminator} stole **${payout}** from you!\nYour remaining balance is ${member_db['money']}")
                         embed.set_author(icon_url=ctx.author.avatar_url, name="Hacker")
@@ -1481,7 +1469,7 @@ class economy(commands.Cog):
         except KeyError:
             date = datetime.datetime.now().replace(microsecond=0)
             date += datetime.timedelta(hours=6)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"last_hack": str(date)}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"last_hack": str(date)}})
 
             ip = str(random.randint(100, 999))
             address = f"{ip}.{random.randint(1, 10)}.{random.randint(1, 10)}.{random.randint(1, 10)}"
@@ -1491,7 +1479,7 @@ class economy(commands.Cog):
                         "<a:loading_pic:833966183841529916> Stealing money..."]
             msg = await ctx.send("Hack starting...")
             i = 0
-            member_db = collection.find_one({"_id": member.id})
+            member_db = self.bot.user_db.find_one({"_id": member.id})
             for message in messages:
                 await msg.edit(content=message)
                 if i == 3 and "firewall" in member_db["inventory"]:
@@ -1510,15 +1498,15 @@ class economy(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} {member.name}#{member.discriminator} is too poor to be hacked.")
             else:
                 if firewall_found:
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - payout}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - payout}})
                     if member_db["firewall_uses"] == 0:
                         desc = f"{ctx.author.name}#{ctx.author.discriminator} tried to hack you but your firewall stopped him.\n**Your firewall expired**"
                         inventory = member_db["inventory"]
                         inventory.remove("firewall")
-                        collection.update_one({"_id": member.id},
+                        self.bot.user_db.update_one({"_id": member.id},
                                               {"$set": {"inventory": inventory}})
                     else:
-                        collection.update_one({"_id": member.id},
+                        self.bot.user_db.update_one({"_id": member.id},
                                               {"$set": {"firewall_uses": member_db["firewall_uses"] - 1}})
                         desc = f"{ctx.author.name}#{ctx.author.discriminator} tried to hack you but your firewall stopped him.\nRemaining firewall uses: {member_db['firewall_uses']}"
                     embed = discord.Embed(title="Hack attempt!",
@@ -1528,8 +1516,8 @@ class economy(commands.Cog):
                     await ctx.send(f"You lost **${payout}** for trying to hack {member.name}#{member.discriminator}")
                     await member.send(embed=embed)
                 else:
-                    collection.update_one({"_id": member.id}, {"$set": {"money": member_db["money"] - payout}})
-                    collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + payout}})
+                    self.bot.user_db.update_one({"_id": member.id}, {"$set": {"money": member_db["money"] - payout}})
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + payout}})
                     embed = discord.Embed(title="You were hacked!",
                                           description=f"{ctx.author.name}#{ctx.author.discriminator} stole **${payout}** from you!\nYour remaining balance is ${member_db['money']}")
                     embed.set_author(icon_url=ctx.author.avatar_url, name="Hacker")
@@ -1539,7 +1527,7 @@ class economy(commands.Cog):
 
     @commands.command(help="Get your daily reward in the economy game.", description="This command takes no arguments.", usage="daily")
     async def daily(self, ctx):
-        user = collection.find_one({"_id": ctx.author.id})
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
             await ctx.send("You must have a career, use `startcareer`")
             return
@@ -1548,8 +1536,8 @@ class economy(commands.Cog):
             if last_daily <= datetime.datetime.now():
                 date = datetime.datetime.now().replace(microsecond=0)
                 date += datetime.timedelta(days=1)
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
-                collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
+                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
                 em = discord.Embed(title=f"Daily Reward for {ctx.author.name}", description=f"**$800** was placed in {ctx.author.name}'s account", color=discord.Colour.blue())
                 em.timestamp = datetime.datetime.utcnow()
                 await ctx.send(embed=em)
@@ -1574,8 +1562,8 @@ class economy(commands.Cog):
         except KeyError:
             date = datetime.datetime.now().replace(microsecond=0)
             date += datetime.timedelta(days=1)
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
-            collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
             em = discord.Embed(title=f"Daily Reward for {ctx.author.name}",
                                description=f"**$800** was placed in {ctx.author.name}'s account", color=discord.Colour.blue())
             em.timestamp = datetime.datetime.utcnow()
@@ -1627,7 +1615,7 @@ def setup(bot):
 #         users_money = {}
 #
 #         for user in u:
-#             member_exists = collection.find_one({"_id": user.id})
+#             member_exists = self.bot.user_db.find_one({"_id": user.id})
 #             users_levels[user.id] = round(float(member_exists["level"]))
 #             users_money[user.id] = member_exists["money"]
 #         if t == "-l" or t == "-level":

@@ -86,6 +86,7 @@ async def on_ready():
 
     print('The bot is online')
 
+
 @bot.event
 async def on_guild_join(guild):
     bot.guild_db.insert_one({"_id": guild.id, "prefix": ["py ", "PY ", "Py ", "pY "], "economy_disabled": False})

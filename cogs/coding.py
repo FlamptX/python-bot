@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import datetime
 import os
+import random
 bot_member = None
 
 load_dotenv()
@@ -237,6 +238,14 @@ class coding(commands.Cog):
             return
 
         guild = collection.find_one({"_id": message.guild.id})
+
+        if message.content == "<@!800832309989081118>" or message.content == "<@800832309989081118>":
+            prefix = await self.bot.get_prefix(message)
+
+            if isinstance(prefix, list):
+                prefix = prefix[0]
+
+            await message.channel.send(random.choice([f"That's me! The server prefix is `{prefix}`", f"Hello! The server prefix is `{prefix}`", f"What's up? The server prefix is `{prefix}`"]))
 
         if guild is not None:
             try:
