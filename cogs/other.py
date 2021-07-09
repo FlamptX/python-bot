@@ -26,15 +26,15 @@ class other(commands.Cog):
     @commands.command(help="Invite the bot to your own server.", description="This command takes no arguments.", usage="invite")
     async def invite(self, ctx):
         embed_var = discord.Embed(title="Invite",
-                                  description="Add me to other servers with this link: [**INVITE**](https://discord.com/api/oauth2/authorize?client_id=800832309989081118&permissions=388160&redirect_uri=https%3A%2F%2Fpython-bot.web.app&scope=bot) \n\nWebsite: https://python-bot.web.app\n\n Join the support server: https://discord.gg/wEWsdEKeEw",
+                                  description="Add me to other servers with this link: [**INVITE**](https://dsc.gg//python-bot) \n\nWebsite: https://python-bot.web.app\n\n Join the support server: https://discord.gg/Mrtg2ggAQ8",
                                   color=3447003)
         await ctx.send(
             embed=embed_var,
             components=[
                 [
                     Button(style=ButtonStyle.URL, label="Invite",
-                           url="https://discord.com/api/oauth2/authorize?client_id=800832309989081118&permissions=388160&redirect_uri=https%3A%2F%2Fpython-bot.web.app&scope=bot"),
-                    Button(style=ButtonStyle.URL, label="Support Server", url="https://discord.gg/wEWsdEKeEw"),
+                           url="https://dsc.gg//python-bot"),
+                    Button(style=ButtonStyle.URL, label="Support Server", url="https://discord.gg/Mrtg2ggAQ8"),
                 ]
             ]
         )

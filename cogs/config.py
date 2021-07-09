@@ -19,7 +19,7 @@ class config(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=["changepref", "changeprefixes"], help="Change the server prefix. | `MANAGE_SERVER`", description="prefix (Required): The new prefix", usage="changeprefix <prefix>")
-    @commands.has_permissions(manage_server=True)
+    @commands.has_permissions(manage_guild=True)
     async def changeprefix(self, ctx, prefix):
 
         msg = await ctx.send(
@@ -56,7 +56,7 @@ class config(commands.Cog):
                 break
 
     @commands.command(aliases=["defaultpref", "defaultprefixes"], help="Set the default prefix which is `py` | `MANAGE_SERVER`", description="This command takes no arguments.", usage="defaultprefix")
-    @commands.has_permissions(manage_server=True)
+    @commands.has_permissions(manage_guild=True)
     async def defaultprefix(self, ctx):
         msg = await ctx.send(
             "Are you sure want to use the default prefix?",
@@ -111,7 +111,7 @@ class config(commands.Cog):
             await ctx.send(":x:  That command either doesn't exist or you typed it incorrectly.")
 
     @commands.command(aliases=["economy-toggle", "economytoggle", "toggle-economy"], help="Enable or disable economy in the server. | `MANAGE_SERVER`", description="option (Required): It can either be `enable` or  `disable`", usage="toggleeconomy <option>")
-    @commands.has_permissions(manage_server=True)
+    @commands.has_permissions(manage_guild=True)
     async def toggleeconomy(self, ctx, option: str = None):
         guild = guilds.find_one({"_id": ctx.guild.id})
         if option is None:
@@ -135,7 +135,7 @@ class config(commands.Cog):
     @toggleeconomy.error
     async def economy_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You are missing the `manage_messages` permission to use this command.")
+            await ctx.send("You are missing the `manage_guild` permission to use this command.")
 
     @getcommand.error
     async def getcommand_error(self, ctx, error):
