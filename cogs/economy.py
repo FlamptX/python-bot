@@ -70,7 +70,7 @@ class economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(help="Start an economy game career.", description="This command takes no arguments.", usage="startcareer")
     async def startcareer(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -85,7 +85,7 @@ class economy(commands.Cog):
         await ctx.send(
             f"**{ctx.author.mention} You have started your career**\nYou are starting as a __freelancer__ with a __low budget laptop__. Start earning some money by working or starting a company and leveling up.\nFor more information use `help economy`")
 
-    @commands.command()
+    @commands.command(help="Quit your economy game job.", description="This command takes no arguments.", usage="quit")
     async def quit(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -103,7 +103,7 @@ class economy(commands.Cog):
                 await ctx.send(
                     f"{ctx.author.mention} you have quit your job. If you want to get a new job use `findjob`")
 
-    @commands.command()
+    @commands.command(help="Find a new economy game job.", description="This command takes no arguments.", usage="findjob")
     async def findjob(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -133,7 +133,7 @@ class economy(commands.Cog):
             collection.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
         await ctx.send(f"You now work as a {job}.")
 
-    @commands.command(aliases=["bal", "balance"])
+    @commands.command(aliases=["bal", "balance"], help="See your economy game career.", description="member (Optional): Include to see someone else's career.", usage="career [member]")
     async def career(self, ctx, member: discord.Member = None):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -241,10 +241,9 @@ class economy(commands.Cog):
             em.set_thumbnail(url=member.avatar_url)
             await ctx.send(embed=em)
 
-    @commands.command(aliases=["add-money"])
+    @commands.command(aliases=["add-money"], hidden=True)
+    @commands.is_owner()
     async def addmoney(self, ctx, member: discord.Member, money):
-        if ctx.author.id != 621309926631014410:
-            return
         if member:
             user = collection.find_one({"_id": member.id})
             if user is None:
@@ -258,7 +257,7 @@ class economy(commands.Cog):
         collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + int(money)}})
         await ctx.send(f"Added ${money} to {member.name}#{member.discriminator}")
 
-    @commands.command()
+    @commands.command(help="Earn money in the economy game.", description="This command takes no arguments.", usage="work")
     async def work(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -481,12 +480,14 @@ class economy(commands.Cog):
             await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.")
             collection.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
 
-    @commands.command()
-    async def sell(self, ctx, *item):
+    @commands.command(help="Sell an item you found.", description="item (Required): The item you want to sell.", usage="sell <item>")
+    async def sell(self, ctx, *, item):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
-        item = " ".join(item).lower()
+        if item is None:
+            await ctx.send("What do you want to sell? Include it in the command.")
+            return
         if item == "graphic card":
             item = "graphics card"
         elif item == "mother board" or item == "main board" or item == "mainboard":
@@ -561,7 +562,7 @@ class economy(commands.Cog):
             collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + price}})
             await ctx.send(f"You sold your **{emoji} {item}** for **${price}**.")
 
-    @commands.command()
+    @commands.command(help="Start an economy game company.", description="name (Required): Name your company.", usage="startcompany")
     async def startcompany(self, ctx, name=None):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -593,7 +594,7 @@ class economy(commands.Cog):
                 await ctx.send(
                     f"{ctx.author.mention} you have started a tech company called **{name}**. Grow your business by hiring workers, advertising and buying better equipment.\nFor more information use `help company`")
 
-    @commands.command()
+    @commands.command(help="Delete your economy game company and all it's worth.", description="This command takes no arguments.", usage="shutdowncompany")
     async def shutdowncompany(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -630,7 +631,7 @@ class economy(commands.Cog):
         except asyncio.TimeoutError:
             await ctx.send(f"{ctx.author.mention} prompt canceled.")
 
-    @commands.command()
+    @commands.command(help="See your economy game company.", description="This command takes no arguments.", usage="company")
     async def company(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -650,7 +651,7 @@ class economy(commands.Cog):
         embed.set_thumbnail(url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["inv"])
+    @commands.command(aliases=["inv"], help="See your economy game inventory.", description="This command takes no arguments.", usage="inventory")
     async def inventory(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -850,7 +851,7 @@ class economy(commands.Cog):
                            color=discord.Colour.blue())
         await ctx.send(embed=em)
 
-    @commands.command()
+    @commands.command(help="Use an item you own.", description="item (Required): The item you want to use.", usage="use <item>")
     async def use(self, ctx, item):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -920,7 +921,7 @@ class economy(commands.Cog):
             else:
                 await ctx.send("You don't have that item.")
 
-    @commands.command()
+    @commands.command(help="See the economy game shop.", description="This command takes no arguments.", usage="shop")
     async def shop(self, ctx):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -1019,7 +1020,7 @@ class economy(commands.Cog):
                 await ctx.message.delete()
                 break
 
-    @commands.command()
+    @commands.command(help="Buy an item from the economy game shop.", description="item (Required): Item to buy.", usage="buy <item>")
     async def buy(self, ctx, *, item=None):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -1345,8 +1346,8 @@ class economy(commands.Cog):
             else:
                 await ctx.send(f"Did you mean `buy {match[0]}`?")
 
-    @commands.command()
-    async def give(self, ctx, member: discord.Member, amount: int, *message):
+    @commands.command(help="Give another member money in the economy game.", description="member (Required): User to give money to.\namount (Required): The amount of **$** you want to give them.\nmessage (Optional): A message with the money..", usage="give <member> <amount> [message]")
+    async def give(self, ctx, member: discord.Member, amount: int, *, message):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
@@ -1371,16 +1372,14 @@ class economy(commands.Cog):
             await ctx.send("You don't have that much money.")
             return
 
-        if message == ():
+        if message is None:
             message = ""
-        else:
-            message = ' '.join(message)
         await ctx.send(f"You gave ${amount} to {member.name}.")
         collection.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] - amount}})
         collection.update_one({"_id": member.id}, {"$set": {"money": user2["money"] + amount}})
         await member.send(f"**{ctx.author.name}#{ctx.author.discriminator}** just gave you ${amount}!\n{message}")
 
-    @commands.command()
+    @commands.command(help="Fake hack. Steal someones money if they don't have a firewall.", description="member (Required): The user to steal money from.", usage="hack <member>")
     async def hack(self, ctx, member: discord.Member):
         if guilds.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -1538,7 +1537,7 @@ class economy(commands.Cog):
                     await ctx.send(f"You stole **${payout}** from {member.name}#{member.discriminator}")
                     await member.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Get your daily reward in the economy game.", description="This command takes no arguments.", usage="daily")
     async def daily(self, ctx):
         user = collection.find_one({"_id": ctx.author.id})
         if user is None:

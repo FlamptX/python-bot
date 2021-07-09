@@ -18,8 +18,8 @@ class config(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["changepref", "changeprefixes"], help="Change the server prefix.", description="prefix (Required): The new prefix", usage="changeprefix <prefix>")
-    @commands.has_permissions(manage_messages=True)
+    @commands.command(aliases=["changepref", "changeprefixes"], help="Change the server prefix. | `MANAGE_SERVER`", description="prefix (Required): The new prefix", usage="changeprefix <prefix>")
+    @commands.has_permissions(manage_server=True)
     async def changeprefix(self, ctx, prefix):
 
         msg = await ctx.send(
@@ -55,8 +55,8 @@ class config(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} Prompt canceled due to no response.")
                 break
 
-    @commands.command(aliases=["defaultpref", "defaultprefixes"], help="Set the default prefix which is `py`", description="This command takes no arguments.", usage="defaultprefix")
-    @commands.has_permissions(manage_messages=True)
+    @commands.command(aliases=["defaultpref", "defaultprefixes"], help="Set the default prefix which is `py` | `MANAGE_SERVER`", description="This command takes no arguments.", usage="defaultprefix")
+    @commands.has_permissions(manage_server=True)
     async def defaultprefix(self, ctx):
         msg = await ctx.send(
             "Are you sure want to use the default prefix?",
@@ -110,8 +110,8 @@ class config(commands.Cog):
         else:
             await ctx.send(":x:  That command either doesn't exist or you typed it incorrectly.")
 
-    @commands.command(aliases=["economy-toggle", "economytoggle", "toggle-economy"], help="Enable or disable economy in the server.", description="option (Required): It can either be `enable` or  `disable`", usage="toggleeconomy <option>")
-    @commands.has_permissions(manage_messages=True)
+    @commands.command(aliases=["economy-toggle", "economytoggle", "toggle-economy"], help="Enable or disable economy in the server. | `MANAGE_SERVER`", description="option (Required): It can either be `enable` or  `disable`", usage="toggleeconomy <option>")
+    @commands.has_permissions(manage_server=True)
     async def toggleeconomy(self, ctx, option: str = None):
         guild = guilds.find_one({"_id": ctx.guild.id})
         if option is None:
