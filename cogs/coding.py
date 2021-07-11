@@ -243,7 +243,7 @@ class coding(commands.Cog):
             prefix = await self.bot.get_prefix(message)
 
             if isinstance(prefix, list):
-                prefix = prefix[0]
+                prefix = prefix[len(prefix) - 1].lower()
 
             await message.channel.send(random.choice([f"That's me! The server prefix is `{prefix}`", f"Hello! The server prefix is `{prefix}`", f"What's up? The server prefix is `{prefix}`"]))
 

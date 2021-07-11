@@ -1003,9 +1003,6 @@ class economy(commands.Cog):
                     ]
                 )
             except asyncio.TimeoutError:
-                # Disable and get outta here
-                await main_message.delete()
-                await ctx.message.delete()
                 break
 
     @commands.command(help="Buy an item from the economy game shop.", description="item (Required): Item to buy.", usage="buy <item>")
@@ -1335,7 +1332,7 @@ class economy(commands.Cog):
                 await ctx.send(f"Did you mean `buy {match[0]}`?")
 
     @commands.command(help="Give another member money in the economy game.", description="member (Required): User to give money to.\namount (Required): The amount of **$** you want to give them.\nmessage (Optional): A message with the money..", usage="give <member> <amount> [message]")
-    async def give(self, ctx, member: discord.Member, amount: int, *, message):
+    async def give(self, ctx, member: discord.Member, amount: int, *, message=None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
             return
@@ -1580,17 +1577,16 @@ class economy(commands.Cog):
             return
         raise error
 
-    # @build.error
-    # async def build_error(self, ctx, error):
-    #     if isinstance(error, commands.MissingRequiredArgument):
-    #         await ctx.send("Specify the device you want to build. Example: `build computer`")
-
     @give.error
     async def give_error(self, ctx, error):
         if isinstance(error, commands.BadArgument) or isinstance(error, commands.MemberNotFound):
             await ctx.send(
                 "You must specify a discord.Member object and an amount as an integer. `give @SomeGuy 100` or `give 123456789 100`\nYou can also add a message at the end: `give @Carl 150 take some money!`")
             return
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("You must include a member and an amount of money to give them. For more info use `py help give`")
+            return
+        raise error
 
     @use.error
     async def use_error(self, ctx, error):

@@ -7,6 +7,11 @@ import difflib
 import discord
 from discord.ext import commands
 from discord_components import DiscordComponents
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("id", nargs='?', default=None)
+args = parser.parse_args()
 
 users = []
 code_message = None
@@ -86,6 +91,9 @@ async def on_ready():
 
     print('The bot is online')
 
+    if args.id is not None:
+        channel = bot.get_channel(int(args.id)) or await bot.fetch_channel(int(args.id))
+        await channel.send("Bot restarted!")
 
 @bot.event
 async def on_guild_join(guild):

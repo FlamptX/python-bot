@@ -41,6 +41,13 @@ class Admin(commands.Cog):
             arr[len(arr) - 1] = "return " + arr[::-1][0]
         return "".join(f"\n\t{i}" for i in arr)
 
+    @commands.command(aliases=["restart"], hidden=True)
+    @commands.is_owner()
+    async def _restart(self, ctx):
+        await ctx.send("Restarting...")
+        os.system("python restart.py " + str(ctx.channel.id))
+        sys.exit()
+
     @commands.command(aliases=['exec'], hidden=True)
     @commands.is_owner()
     async def _exec(self, ctx, *, code: str):
@@ -77,9 +84,8 @@ class Admin(commands.Cog):
         del args, code, silent
 
     @commands.command(name='reload', hidden=True)
+    @commands.is_owner()
     async def _reload(self, ctx, *, module: str):
-        if ctx.author.id != 621309926631014410:
-            return
         """Reloads a module."""
         if module == "all":
             i = 0
@@ -114,15 +120,15 @@ class Admin(commands.Cog):
             await ctx.send("Missing the module argument.")
 
     @commands.command(hidden=True)
+    @commands.is_owner()
     async def react(self, ctx, msg_id: int):
         message = await ctx.channel.fetch_message(msg_id)
         await message.add_reaction("❓")
         await ctx.send("Done")
 
     @commands.command(hidden=True)
+    @commands.is_owner()
     async def fixguilds(self, ctx):
-        if ctx.author.id != 621309926631014410:
-            return
         msg = await ctx.send("<a:loading_pic:833966183841529916> Deleting cached guilds...")
         guild_ids = []
         for guild in self.bot.guilds:
@@ -135,9 +141,8 @@ class Admin(commands.Cog):
         await msg.edit(content=f"Deleted {i} guilds.")
 
     @commands.command(hidden=True)
+    @commands.is_owner()
     async def data(self, ctx):
-        if ctx.author.id != 621309926631014410:
-            return
         start = datetime.now()
         test_guild = guilds.find_one({"_id": 799328665442713600})
         end = datetime.now()
@@ -152,6 +157,7 @@ class Admin(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["eval-send", "sendeval", "send-eval"], hidden=True)
+    @commands.is_owner()
     async def evalsend(self, ctx, user_id=None, *, message):
         if user_id is None:
             await ctx.send("Missing the user argument.")
@@ -159,10 +165,9 @@ class Admin(commands.Cog):
         elif message is None:
             await ctx.send("Missing the message argument.")
             return
-        if ctx.author.id == 621309926631014410:
-            user = await self.bot.fetch_user(int(user_id))
-            await user.send(message)
-            await ctx.send(f"Message sent to **{user.name}#{user.discriminator}**")
+        user = await self.bot.fetch_user(int(user_id))
+        await user.send(message)
+        await ctx.send(f"Message sent to **{user.name}#{user.discriminator}**")
 
     @commands.command(hidden=True)
     @commands.has_permissions(manage_messages=True)
