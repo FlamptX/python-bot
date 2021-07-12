@@ -51,6 +51,14 @@ def item_emoji(part):
         return "<:pipe:831458831900999690>"
     elif part == "psu":
         return "<:power:831458832001138728>"
+    elif part == "low budget laptop":
+        return ":keyboard:"
+    elif part == "average laptop":
+        return ":computer:"
+    elif part == "high quality laptop":
+        return ":desktop:"
+    elif part == "pc":
+        return ":joystick:"
     else:
         return ""
 
@@ -469,9 +477,13 @@ class economy(commands.Cog):
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
 
     @commands.command(help="Sell an item you found.", description="item (Required): The item you want to sell.", usage="sell <item>")
-    async def sell(self, ctx, *, item):
+    async def sell(self, ctx, *, item=None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
+            return
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
+        if user is None:
+            await ctx.send("You must have a career, use `startcareer`")
             return
         if item is None:
             await ctx.send("What do you want to sell? Include it in the command.")
@@ -486,14 +498,10 @@ class economy(commands.Cog):
             item = "water cooler tank"
         elif item == "pipe" or item == "cooler pipe":
             item = "water cooler pipe"
-        user = self.bot.user_db.find_one({"_id": ctx.author.id})
-        if user is None:
-            await ctx.send("You must have a career, use `startcareer`")
-            return
         if item == "":
             await ctx.send("Specify the item you want to sell. Example: `sell cable`")
-        elif item not in parts1 and item not in parts2 and item not in parts3:
-            await ctx.send("That item is not on the market.")
+        elif item in ["apple", "firewall", "antivirus", "anti virus"] or (item not in parts1 and item not in parts2 and item not in parts3 and item not in ["low budget laptop", "average laptop", "high quality laptop"]):
+            await ctx.send("That item is either not on the market or not sellable.")
         elif item not in user["inventory"]:
             await ctx.send(random.choice(["You don't have that.", "You don't own that."]))
         else:
@@ -501,51 +509,53 @@ class economy(commands.Cog):
             if item == "cable":
                 price = random.randint(50, 75)
                 inventory.remove("cable")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "fan":
                 price = fan_price
                 inventory.remove("fan")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "hard disk" or item == "harddisk":
                 price = harddisk_price
                 inventory.remove("hard disk")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "ram":
                 price = ram_price
                 inventory.remove("ram")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "cpu":
                 price = cpu_price
                 inventory.remove("cpu")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "motherboard":
                 price = motherboard_price
                 inventory.remove("motherboard")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "graphics card":
                 price = graphicscard_price
                 inventory.remove("graphics card")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "ssd":
                 price = ssd_price
                 inventory.remove("ssd")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "water cooler tank":
                 price = tank_price
                 inventory.remove("water cooler tank")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "water cooler pipe":
                 price = pipe_price
                 inventory.remove("water cooler pipe")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             elif item == "psu" or item == "power":
                 price = psu_price
                 inventory.remove("psu")
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+            elif item == "low budget laptop":
+                price = random.randint(300, 400)
+                inventory.remove("low budget laptop")
+            elif item == "average laptop":
+                price = random.randint(800, 1000)
+                inventory.remove("average laptop")
+            elif item == "high quality laptop":
+                price = random.randint(2000, 2200)
+                inventory.remove("high quality laptop")
+            elif item == "pc":
+                price = random.randint(1000, 1500) * (int(f"{user['level'][0]}.{user['level'][1]}") if len(user["level"]) >= 4 else int(f"1.{user['level'][2]}"))
+                inventory.remove("pc")
             else:
-                await ctx.send("Something went wrong.")
+                await ctx.send("Something went wrong. Please use `py suggest` to report the issue. Make sure to include the item you tried to sell.")
                 return
 
+            self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             emoji = item_emoji(item)
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + price}})
             await ctx.send(f"You sold your **{emoji} {item}** for **${price}**.")
@@ -698,6 +708,8 @@ class economy(commands.Cog):
                     item = item + "'s"
                 else:
                     emoji = ":apple: "
+            elif item == "pc":
+                emoji = ":joystick: "
             else:
                 continue
             fl = item[0].upper()
