@@ -51,11 +51,11 @@ def item_emoji(part):
         return "<:pipe:831458831900999690>"
     elif part == "psu":
         return "<:power:831458832001138728>"
-    elif part == "low budget laptop":
+    elif part == "laptop":
         return ":keyboard:"
-    elif part == "average laptop":
+    elif part == "office pc":
         return ":computer:"
-    elif part == "high quality laptop":
+    elif part == "gaming pc":
         return ":desktop:"
     elif part == "pc":
         return ":joystick:"
@@ -75,13 +75,13 @@ class economy(commands.Cog):
             return
         try:
             self.bot.user_db.insert_one({"_id": ctx.author.id, "level": "1.0", "money": 100, "job": "freelancer",
-                                         "inventory": ["low budget laptop", "slow wifi router"], "antivirus_work": 0})
+                                         "inventory": ["laptop", "office pc"], "antivirus_work": 0})
         except Exception:
             await ctx.send(
                 f"{ctx.author.mention} you already have a career. If you want to quit use `quit`")
             return
         await ctx.send(
-            f"**{ctx.author.mention} You have started your career**\nYou are starting as a __freelancer__ with a __low budget laptop__. Start earning some money by working or starting a company and leveling up.\nFor more information use `help economy`")
+            f"**{ctx.author.mention} You have started your career**\nYou are starting as a __freelancer__ with a __laptop__. Start earning some money by working or starting a company and leveling up.\nFor more information use `help economy`")
 
     @commands.command(help="Quit your economy game job.", description="This command takes no arguments.", usage="quit")
     async def quit(self, ctx):
@@ -321,20 +321,20 @@ class economy(commands.Cog):
         else:
             payout = 0
 
-        if "high quality laptop" in user["inventory"]:
-            remove = "high quality laptop"
+        if "gaming pc" in user["inventory"]:
+            remove = "gaming pc"
             break_laptop = random.randint(1, 100) <= 3 and user["money"] > 4500
-        elif "average laptop" in user["inventory"]:
-            remove = "average laptop"
+        elif "office pc" in user["inventory"]:
+            remove = "office pc"
             break_laptop = random.randint(1, 100) <= 8 and user["money"] > 2000
-        elif "low budget laptop" in user["inventory"]:
-            remove = "low budget laptop"
+        elif "laptop" in user["inventory"]:
+            remove = "laptop"
             break_laptop = random.randint(1, 100) <= 18 and user["money"] > 750
         else:
             await ctx.send(random.choice(
-                [f"{ctx.author.mention} what do you think you're gonna work with? Buy a laptop.",
-                 f"{ctx.author.mention} you don't have a laptop. Buy one.",
-                 f"{ctx.author.mention} buy a laptop to work."]))
+                [f"{ctx.author.mention} what do you think you're gonna work with? Buy a pc.",
+                 f"{ctx.author.mention} you don't have a pc. Buy one.",
+                 f"{ctx.author.mention} buy a pc to work."]))
             date = datetime.datetime.now().replace(microsecond=0)
             self.bot.user_db.update_one({"_id": ctx.author.id},
                                         {"$set": {"last_work": str(date)}})
@@ -351,7 +351,7 @@ class economy(commands.Cog):
 
         if break_laptop and break_router:
             await ctx.send(
-                f"{ctx.author.mention} your laptop and wifi router just broke! You can't work until you buy a new laptop.")
+                f"{ctx.author.mention} your pc and wifi router just broke! You can't work until you buy a new pc.")
             inventory = user["inventory"]
             inventory.remove(remove)
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -370,7 +370,7 @@ class economy(commands.Cog):
             inventory.remove(remove_router)
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
         elif break_laptop:
-            await ctx.send(f"{ctx.author.mention} your laptop just broke! You can't work until you buy a new one.")
+            await ctx.send(f"{ctx.author.mention} your pc just broke! You can't work until you buy a new one.")
             inventory = user["inventory"]
             inventory.remove(remove)
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -508,9 +508,9 @@ class economy(commands.Cog):
         if item == "":
             await ctx.send("Specify the item you want to sell. Example: `sell cable`")
         elif item in ["apple", "firewall", "antivirus", "anti virus"] or (
-                item not in parts1 and item not in parts2 and item not in parts3 and item not in ["low budget laptop",
-                                                                                                  "average laptop",
-                                                                                                  "high quality laptop"]):
+                item not in parts1 and item not in parts2 and item not in parts3 and item not in ["laptop",
+                                                                                                  "office pc",
+                                                                                                  "gamin pc"]):
             await ctx.send("That item is either not on the market or not sellable.")
         elif item not in user["inventory"]:
             await ctx.send(random.choice(["You don't have that.", "You don't own that."]))
@@ -549,15 +549,15 @@ class economy(commands.Cog):
             elif item == "psu" or item == "power":
                 price = psu_price
                 inventory.remove("psu")
-            elif item == "low budget laptop":
+            elif item == "laptop":
                 price = random.randint(300, 400)
-                inventory.remove("low budget laptop")
-            elif item == "average laptop":
+                inventory.remove("laptop")
+            elif item == "office pc":
                 price = random.randint(800, 1000)
-                inventory.remove("average laptop")
-            elif item == "high quality laptop":
+                inventory.remove("office pc")
+            elif item == "office pc":
                 price = random.randint(2000, 2200)
-                inventory.remove("high quality laptop")
+                inventory.remove("gaming pc")
             elif item == "pc":
                 price = random.randint(1000, 1500) * (
                     int(f"{user['level'][0]}.{user['level'][1]}") if len(user["level"]) >= 4 else int(
@@ -679,11 +679,11 @@ class economy(commands.Cog):
         i = 0
         laptops = f""
         for item in inventory:
-            if item == "low budget laptop":
+            if item == "laptop":
                 emoji = ":keyboard: "
-            elif item == "average laptop":
+            elif item == "office pc":
                 emoji = ":computer: "
-            elif item == "high quality laptop":
+            elif item == "gaming pc":
                 emoji = ":desktop: "
             else:
                 continue
@@ -946,7 +946,7 @@ class economy(commands.Cog):
             return
 
         em1 = discord.Embed(title="Shop",
-                            description=":keyboard: **Low budget laptop `$750`**\nBasic laptop for freelancers, slow and easily breaks.\n\n:computer: **Average laptop `$2000`**\nWorks alright, medium speed and doesn't break often.\n\n:desktop: **High quality laptop `$4500`**\nThe fastest, hardly breaks.\n\n:fax: **Good wifi router `$1500`**\nMedium speed, will get the job done faster.\n\n:satellite: **Very fast wifi router `$4000`**\nLightning fast, almost never lags.\n\n:microbe: **Antivirus `$500`**\nProtect your money from viruses that can randomly steal. Expires after working 12 times.\n\n:shield: **Firewall `$750`**\nProtect your money from hackers. Expires after working 5 times.",
+                            description=":keyboard: **Laptop `$750`**\nBasic laptop for freelancers, slow and easily breaks.\n\n:computer: **Office PC `$2000`**\nWorks alright, average speed and doesn't break often.\n\n:desktop: **Gaming PC `$4500`**\nThe fastest, hardly breaks.\n\n:fax: **Good wifi router `$1500`**\nMedium speed, will get the job done faster.\n\n:satellite: **Very fast wifi router `$4000`**\nLightning fast, almost never lags.\n\n:microbe: **Antivirus `$500`**\nProtect your money from viruses that can randomly steal. Expires after working 12 times.\n\n:shield: **Firewall `$750`**\nProtect your money from hackers. Expires after 5 uses.",
                             color=discord.Colour.green())
 
         em2 = discord.Embed(title="Company shop",
@@ -964,7 +964,7 @@ class economy(commands.Cog):
 
         current = 0
         # Sending first message
-        main_message = await ctx.send(
+        await ctx.send(
             embed=embed_list[current],
             components=[
                 [
@@ -1049,16 +1049,16 @@ class economy(commands.Cog):
             await ctx.send("What do you want to buy? Include it in the command.")
             return
         inventory = user["inventory"]
-        if "low budget laptop" in item.lower():
-            if "low budget laptop" in user["inventory"]:
+        if "laptop" in item.lower():
+            if "laptop" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 750:
-                em = discord.Embed(title="Low budget laptop purchase",
-                                   description=f"{ctx.author.mention} bought **low budget laptop** for `$750`",
+                em = discord.Embed(title="Laptop purchase",
+                                   description=f"{ctx.author.mention} bought **laptop** for `$750`",
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
-                inventory.append("low budget laptop")
+                inventory.append("laptop")
                 self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
@@ -1070,16 +1070,16 @@ class economy(commands.Cog):
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
                                               f"{ctx.author.mention} you can't afford that."]))
-        elif "average laptop" in item.lower():
-            if "average laptop" in user["inventory"]:
+        elif "office pc" in item.lower():
+            if "office pc" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 2000:
-                em = discord.Embed(title="Average laptop purchase",
-                                   description=f"{ctx.author.mention} bought **average laptop** for `$2000`",
+                em = discord.Embed(title="Office PC purchase",
+                                   description=f"{ctx.author.mention} bought **office pc** for `$2000`",
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
-                inventory.append("average laptop")
+                inventory.append("office pc")
                 self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
@@ -1091,16 +1091,16 @@ class economy(commands.Cog):
             else:
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money to buy that.",
                                               f"{ctx.author.mention} you can't afford that."]))
-        elif "high quality laptop" in item.lower():
-            if "high quality laptop" in user["inventory"]:
+        elif "gaming pc" in item.lower():
+            if "gaming pc" in user["inventory"]:
                 await ctx.send(f"{ctx.author.mention} you already have that.")
                 return
             if user["money"] >= 4500:
-                em = discord.Embed(title="High quality laptop purchase",
-                                   description=f"{ctx.author.mention} bought **high quality laptop** for `$4500`",
+                em = discord.Embed(title="Gaming PC purchase",
+                                   description=f"{ctx.author.mention} bought **gaming pc** for `$4500`",
                                    color=discord.Colour.from_rgb(255, 248, 0))
                 em.set_author(name="", icon_url=ctx.author.avatar_url)
-                inventory.append("high quality laptop")
+                inventory.append("gaming pc")
                 self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
                 if random.randint(1, 100) < 60:
                     level = user['level']
@@ -1351,7 +1351,7 @@ class economy(commands.Cog):
                 await ctx.send(random.choice([f"{ctx.author.mention} you don't have enough money for that.",
                                               f"{ctx.author.mention} you can't afford it."]))
         else:
-            lst = ["low budget laptop", "average laptop", "high quality laptop", "apple", "antivirus", "firewall",
+            lst = ["laptop", "office pc", "gaming pc", "apple", "antivirus", "firewall",
                    "skyscraper", "large office building", "medium office building", "old building"]
             item = ctx.message.content
             match = difflib.get_close_matches(item, lst, n=1)
@@ -1417,12 +1417,11 @@ class economy(commands.Cog):
         if ctx.author == member:
             await ctx.send("You can't hack yourself...")
             return
-        if "average laptop" not in user["inventory"] and "high quality laptop" not in user[
-            "inventory"] and "low budget laptop" not in user["inventory"]:
+        if "office pc" not in user["inventory"] and "gaming pc" not in user["inventory"] and "laptop" not in user["inventory"]:
             await ctx.send("You need to have laptop to hack, either average or high quality.")
             return
-        elif "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"]:
-            await ctx.send("You can't hack with a low budget laptop.")
+        elif "office pc" not in user["inventory"] and "gaming pc" not in user["inventory"]:
+            await ctx.send("You can't hack with a laptop.")
             return
         try:
             last_hack = datetime.datetime.strptime(user["last_hack"], "%Y-%m-%d %H:%M:%S")
@@ -1638,6 +1637,7 @@ class economy(commands.Cog):
         ]])
 
         page = "workbench"
+        current_embed = embed
 
         while True:
             user = self.bot.user_db.find_one({"_id": ctx.author.id})
@@ -1645,10 +1645,13 @@ class economy(commands.Cog):
 
             try:
                 res = await self.bot.wait_for("button_click",
-                                              check=lambda i: i.message.id == msg.id and i.user.id == ctx.author.id,
+                                              check=lambda i: i.message.id == msg.id,
                                               timeout=60)
+                if res.user.id != ctx.author.id:
+                    await res.respond(type=InteractionType.ChannelMessageWithSource, content=f"That is {ctx.author.name}'s workbench. To work on your own use the `build` command.")
                 if res.component.id == "back":
                     page = "workbench"
+                    current_embed = embed
                     await res.respond(type=InteractionType.UpdateMessage, embed=embed, components=[[
                         Button(label="Build PC", id="pc",
                                style=ButtonStyle.green if all(
@@ -1667,22 +1670,23 @@ class economy(commands.Cog):
                                        description=f"You are missing these parts in order to build a {'pc' if res.component.id == 'pc' else 'laptop'}:\n**{missing}**",
                                        color=discord.Color.red())
                     em.set_footer(text="You can get more parts by working.")
+                    current_embed = em
 
                     await res.respond(type=InteractionType.UpdateMessage, embed=em, components=[
                         Button(label="Go back", style=ButtonStyle.gray, id="back")
                     ])
                 elif res.component.style == ButtonStyle.green:
-                    page = "back"
+                    page = "back2"
                     if res.component.id == "pc":
                         for part in pc_parts:
                             # Remove the parts
                             inventory.remove(part)
 
                         # Add a PC to the inventory
-                        inventory.append("pc")
+                        inventory.append("office pc")
 
                         # Respond with embed
-                        em = discord.Embed(title="You built a PC", description=f"You made a PC that you can sell.",
+                        em = discord.Embed(title="You built a PC", description=f"You made a `office pc` that you can either sell or use.",
                                            colour=discord.Colour.green())
                     else:
                         for part in laptop_parts:
@@ -1690,14 +1694,16 @@ class economy(commands.Cog):
                             inventory.remove(part)
 
                         # Add a laptop to the inventory
-                        inventory.append("average laptop")
+                        inventory.append("laptop")
 
                         # Respond with embed
-                        em = discord.Embed(title=f"You built an average laptop",
-                                           description=f"You made a laptop that you can sell or use.",
+                        em = discord.Embed(title=f"You built a laptop",
+                                           description=f"You made a `laptop` that you can either sell or use.",
                                            colour=discord.Colour.green())
 
                     self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+
+                    current_embed = em
 
                     await res.respond(type=InteractionType.UpdateMessage, embed=em, components=[
                         Button(label="Go back", style=ButtonStyle.gray, id="back")
@@ -1705,17 +1711,18 @@ class economy(commands.Cog):
 
             except asyncio.TimeoutError:
                 if page == "workbench":
-                    await msg.edit(components=[[
+                    await msg.edit(em=current_embed, components=[[
                         Button(label="Build PC", id="pc",
                                style=ButtonStyle.gray, disabled=True),
                         Button(label="Build Laptop", id="laptop",
                                style=ButtonStyle.gray, disabled=True)
                     ]])
                 else:
-                    await msg.edit(components=[[
+                    await msg.edit(em=current_embed, components=[[
                         Button(label="Go back", id="back",
                                style=ButtonStyle.gray, disabled=True)
                     ]])
+                break
 
     @build.error
     async def build_error(self, ctx, error):
