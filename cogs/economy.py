@@ -62,11 +62,13 @@ def item_emoji(part):
     else:
         return ""
 
+
 class economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(help="Start an economy game career.", description="This command takes no arguments.", usage="startcareer")
+    @commands.command(help="Start an economy game career.", description="This command takes no arguments.",
+                      usage="startcareer")
     async def startcareer(self, ctx):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -99,7 +101,8 @@ class economy(commands.Cog):
                 await ctx.send(
                     f"{ctx.author.mention} you have quit your job. If you want to get a new job use `findjob`")
 
-    @commands.command(help="Find a new economy game job.", description="This command takes no arguments.", usage="findjob")
+    @commands.command(help="Find a new economy game job.", description="This command takes no arguments.",
+                      usage="findjob")
     async def findjob(self, ctx):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -129,7 +132,8 @@ class economy(commands.Cog):
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": job}})
         await ctx.send(f"You now work as a {job}.")
 
-    @commands.command(aliases=["bal", "balance"], help="See your economy game career.", description="member (Optional): Include to see someone else's career.", usage="career [member]")
+    @commands.command(aliases=["bal", "balance"], help="See your economy game career.",
+                      description="member (Optional): Include to see someone else's career.", usage="career [member]")
     async def career(self, ctx, member: discord.Member = None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -253,7 +257,8 @@ class economy(commands.Cog):
         self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + int(money)}})
         await ctx.send(f"Added ${money} to {member.name}#{member.discriminator}")
 
-    @commands.command(help="Earn money in the economy game.", description="This command takes no arguments.", usage="work")
+    @commands.command(help="Earn money in the economy game.", description="This command takes no arguments.",
+                      usage="work")
     async def work(self, ctx):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -299,7 +304,7 @@ class economy(commands.Cog):
         else:
             date += datetime.timedelta(minutes=15)
         self.bot.user_db.update_one({"_id": ctx.author.id},
-                              {"$set": {"last_work": str(date)}})
+                                    {"$set": {"last_work": str(date)}})
 
         if ctx.channel.id == 831462745316392990:
             payout = 0
@@ -332,7 +337,7 @@ class economy(commands.Cog):
                  f"{ctx.author.mention} buy a laptop to work."]))
             date = datetime.datetime.now().replace(microsecond=0)
             self.bot.user_db.update_one({"_id": ctx.author.id},
-                                  {"$set": {"last_work": str(date)}})
+                                        {"$set": {"last_work": str(date)}})
             return
 
         if "good wifi router" in user["inventory"]:
@@ -352,7 +357,7 @@ class economy(commands.Cog):
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             date = datetime.datetime.now().replace(microsecond=0)
             self.bot.user_db.update_one({"_id": ctx.author.id},
-                                  {"$set": {"last_work": str(date)}})
+                                        {"$set": {"last_work": str(date)}})
             inventory = user["inventory"]
             # noinspection PyUnboundLocalVariable
             inventory.remove(remove_router)
@@ -371,7 +376,7 @@ class economy(commands.Cog):
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
             date = datetime.datetime.now().replace(microsecond=0)
             self.bot.user_db.update_one({"_id": ctx.author.id},
-                                  {"$set": {"last_work": str(date)}})
+                                        {"$set": {"last_work": str(date)}})
             return
 
         if "antivirus" not in user["inventory"] and random.randint(1, 100) <= 10 and user["money"] > 500:
@@ -438,7 +443,8 @@ class economy(commands.Cog):
             level_bonus = False
         try:
             if "antivirus" in user["inventory"]:
-                self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"antivirus_work": user["antivirus_work"] + 1}})
+                self.bot.user_db.update_one({"_id": ctx.author.id},
+                                            {"$set": {"antivirus_work": user["antivirus_work"] + 1}})
         except KeyError:
             pass
         if level_bonus:  # Check level bonus
@@ -476,7 +482,8 @@ class economy(commands.Cog):
             await ctx.send(f"{ctx.author.mention} You worked and earned **${payout}**.")
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": new_money}})
 
-    @commands.command(help="Sell an item you found.", description="item (Required): The item you want to sell.", usage="sell <item>")
+    @commands.command(help="Sell an item you found.", description="item (Required): The item you want to sell.",
+                      usage="sell <item>")
     async def sell(self, ctx, *, item=None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -500,7 +507,10 @@ class economy(commands.Cog):
             item = "water cooler pipe"
         if item == "":
             await ctx.send("Specify the item you want to sell. Example: `sell cable`")
-        elif item in ["apple", "firewall", "antivirus", "anti virus"] or (item not in parts1 and item not in parts2 and item not in parts3 and item not in ["low budget laptop", "average laptop", "high quality laptop"]):
+        elif item in ["apple", "firewall", "antivirus", "anti virus"] or (
+                item not in parts1 and item not in parts2 and item not in parts3 and item not in ["low budget laptop",
+                                                                                                  "average laptop",
+                                                                                                  "high quality laptop"]):
             await ctx.send("That item is either not on the market or not sellable.")
         elif item not in user["inventory"]:
             await ctx.send(random.choice(["You don't have that.", "You don't own that."]))
@@ -549,10 +559,13 @@ class economy(commands.Cog):
                 price = random.randint(2000, 2200)
                 inventory.remove("high quality laptop")
             elif item == "pc":
-                price = random.randint(1000, 1500) * (int(f"{user['level'][0]}.{user['level'][1]}") if len(user["level"]) >= 4 else int(f"1.{user['level'][2]}"))
+                price = random.randint(1000, 1500) * (
+                    int(f"{user['level'][0]}.{user['level'][1]}") if len(user["level"]) >= 4 else int(
+                        f"1.{user['level'][2]}"))
                 inventory.remove("pc")
             else:
-                await ctx.send("Something went wrong. Please use `py suggest` to report the issue. Make sure to include the item you tried to sell.")
+                await ctx.send(
+                    "Something went wrong. Please use `py suggest` to report the issue. Make sure to include the item you tried to sell.")
                 return
 
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -560,7 +573,8 @@ class economy(commands.Cog):
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + price}})
             await ctx.send(f"You sold your **{emoji} {item}** for **${price}**.")
 
-    @commands.command(help="Start an economy game company.", description="name (Required): Name your company.", usage="startcompany")
+    @commands.command(help="Start an economy game company.", description="name (Required): Name your company.",
+                      usage="startcompany")
     async def startcompany(self, ctx, name=None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -587,12 +601,13 @@ class economy(commands.Cog):
                 await ctx.send("You must pick a name for the company.\nExample: `startcompany google`")
             else:
                 self.bot.user_db.update_one({"_id": ctx.author.id},
-                                      {"$set": {"company": {"name": name, "workers": 0, "building": "None"}}})
+                                            {"$set": {"company": {"name": name, "workers": 0, "building": "None"}}})
                 self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"job": "Company Owner"}})
                 await ctx.send(
                     f"{ctx.author.mention} you have started a tech company called **{name}**. Grow your business by hiring workers, advertising and buying better equipment.\nFor more information use `help company`")
 
-    @commands.command(help="Delete your economy game company and all it's worth.", description="This command takes no arguments.", usage="shutdowncompany")
+    @commands.command(help="Delete your economy game company and all it's worth.",
+                      description="This command takes no arguments.", usage="shutdowncompany")
     async def shutdowncompany(self, ctx):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -629,7 +644,8 @@ class economy(commands.Cog):
         except asyncio.TimeoutError:
             await ctx.send(f"{ctx.author.mention} prompt canceled.")
 
-    @commands.command(help="See your economy game company.", description="This command takes no arguments.", usage="company")
+    @commands.command(help="See your economy game company.", description="This command takes no arguments.",
+                      usage="company")
     async def company(self, ctx):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -649,7 +665,8 @@ class economy(commands.Cog):
         embed.set_thumbnail(url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["inv"], help="See your economy game inventory.", description="This command takes no arguments.", usage="inventory")
+    @commands.command(aliases=["inv"], help="See your economy game inventory.",
+                      description="This command takes no arguments.", usage="inventory")
     async def inventory(self, ctx):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -851,7 +868,8 @@ class economy(commands.Cog):
                            color=discord.Colour.blue())
         await ctx.send(embed=em)
 
-    @commands.command(help="Use an item you own.", description="item (Required): The item you want to use.", usage="use <item>")
+    @commands.command(help="Use an item you own.", description="item (Required): The item you want to use.",
+                      usage="use <item>")
     async def use(self, ctx, item):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -889,9 +907,9 @@ class economy(commands.Cog):
                                     del inventory[i]
                                     user["level"] = str(float(user["level"]) + 1)
                                     self.bot.user_db.update_one({"_id": ctx.author.id},
-                                                          {"$set": {"level": user["level"]}})
+                                                                {"$set": {"level": user["level"]}})
                                     self.bot.user_db.update_one({"_id": ctx.author.id},
-                                                          {"$set": {"inventory": inventory}})
+                                                                {"$set": {"inventory": inventory}})
                                     found += 1
                                 i += 1
                             if msg.content != "1":
@@ -906,7 +924,7 @@ class economy(commands.Cog):
                 elif amount == 1:
                     user["level"] = str(float(user["level"]) + 1)
                     self.bot.user_db.update_one({"_id": ctx.author.id},
-                                          {"$set": {"level": user["level"]}})
+                                                {"$set": {"level": user["level"]}})
                     inventory = user["inventory"]
                     inventory.remove("apple")
                     self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
@@ -1017,7 +1035,8 @@ class economy(commands.Cog):
             except asyncio.TimeoutError:
                 break
 
-    @commands.command(help="Buy an item from the economy game shop.", description="item (Required): Item to buy.", usage="buy <item>")
+    @commands.command(help="Buy an item from the economy game shop.", description="item (Required): Item to buy.",
+                      usage="buy <item>")
     async def buy(self, ctx, *, item=None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -1343,7 +1362,9 @@ class economy(commands.Cog):
             else:
                 await ctx.send(f"Did you mean `buy {match[0]}`?")
 
-    @commands.command(help="Give another member money in the economy game.", description="member (Required): User to give money to.\namount (Required): The amount of **$** you want to give them.\nmessage (Optional): A message with the money..", usage="give <member> <amount> [message]")
+    @commands.command(help="Give another member money in the economy game.",
+                      description="member (Required): User to give money to.\namount (Required): The amount of **$** you want to give them.\nmessage (Optional): A message with the money..",
+                      usage="give <member> <amount> [message]")
     async def give(self, ctx, member: discord.Member, amount: int, *, message=None):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -1376,7 +1397,8 @@ class economy(commands.Cog):
         self.bot.user_db.update_one({"_id": member.id}, {"$set": {"money": user2["money"] + amount}})
         await member.send(f"**{ctx.author.name}#{ctx.author.discriminator}** just gave you ${amount}!\n{message}")
 
-    @commands.command(help="Fake hack. Steal someones money if they don't have a firewall.", description="member (Required): The user to steal money from.", usage="hack <member>")
+    @commands.command(help="Fake hack. Steal someones money if they don't have a firewall.",
+                      description="member (Required): The user to steal money from.", usage="hack <member>")
     async def hack(self, ctx, member: discord.Member):
         if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
             await ctx.send("Economy is disabled for this server.")
@@ -1395,7 +1417,8 @@ class economy(commands.Cog):
         if ctx.author == member:
             await ctx.send("You can't hack yourself...")
             return
-        if "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"] and "low budget laptop" not in user["inventory"]:
+        if "average laptop" not in user["inventory"] and "high quality laptop" not in user[
+            "inventory"] and "low budget laptop" not in user["inventory"]:
             await ctx.send("You need to have laptop to hack, either average or high quality.")
             return
         elif "average laptop" not in user["inventory"] and "high quality laptop" not in user["inventory"]:
@@ -1439,10 +1462,10 @@ class economy(commands.Cog):
                             inventory = member_db["inventory"]
                             inventory.remove("firewall")
                             self.bot.user_db.update_one({"_id": member.id},
-                                                  {"$set": {"inventory": inventory}})
+                                                        {"$set": {"inventory": inventory}})
                         else:
                             self.bot.user_db.update_one({"_id": member.id},
-                                                  {"$set": {"firewall_uses": member_db["firewall_uses"] - 1}})
+                                                        {"$set": {"firewall_uses": member_db["firewall_uses"] - 1}})
                             desc = f"{ctx.author.name}#{ctx.author.discriminator} tried to hack you but your firewall stopped him.\nRemaining firewall uses: {member_db['firewall_uses']}"
                         embed = discord.Embed(title="Hack attempt!",
                                               description=desc)
@@ -1452,7 +1475,8 @@ class economy(commands.Cog):
                             f"You lost **${payout}** for trying to hack {member.name}#{member.discriminator}")
                         await member.send(embed=embed)
                     else:
-                        self.bot.user_db.update_one({"_id": member.id}, {"$set": {"money": member_db["money"] - payout}})
+                        self.bot.user_db.update_one({"_id": member.id},
+                                                    {"$set": {"money": member_db["money"] - payout}})
                         self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + payout}})
                         embed = discord.Embed(title="You were hacked!",
                                               description=f"{ctx.author.name}#{ctx.author.discriminator} stole **${payout}** from you!\nYour remaining balance is ${member_db['money']}")
@@ -1513,10 +1537,10 @@ class economy(commands.Cog):
                         inventory = member_db["inventory"]
                         inventory.remove("firewall")
                         self.bot.user_db.update_one({"_id": member.id},
-                                              {"$set": {"inventory": inventory}})
+                                                    {"$set": {"inventory": inventory}})
                     else:
                         self.bot.user_db.update_one({"_id": member.id},
-                                              {"$set": {"firewall_uses": member_db["firewall_uses"] - 1}})
+                                                    {"$set": {"firewall_uses": member_db["firewall_uses"] - 1}})
                         desc = f"{ctx.author.name}#{ctx.author.discriminator} tried to hack you but your firewall stopped him.\nRemaining firewall uses: {member_db['firewall_uses']}"
                     embed = discord.Embed(title="Hack attempt!",
                                           description=desc)
@@ -1534,7 +1558,8 @@ class economy(commands.Cog):
                     await ctx.send(f"You stole **${payout}** from {member.name}#{member.discriminator}")
                     await member.send(embed=embed)
 
-    @commands.command(help="Get your daily reward in the economy game.", description="This command takes no arguments.", usage="daily")
+    @commands.command(help="Get your daily reward in the economy game.", description="This command takes no arguments.",
+                      usage="daily")
     async def daily(self, ctx):
         user = self.bot.user_db.find_one({"_id": ctx.author.id})
         if user is None:
@@ -1547,7 +1572,9 @@ class economy(commands.Cog):
                 date += datetime.timedelta(days=1)
                 self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
                 self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
-                em = discord.Embed(title=f"Daily Reward for {ctx.author.name}", description=f"**$800** was placed in {ctx.author.name}'s account", color=discord.Colour.blue())
+                em = discord.Embed(title=f"Daily Reward for {ctx.author.name}",
+                                   description=f"**$800** was placed in {ctx.author.name}'s account",
+                                   color=discord.Colour.blue())
                 em.timestamp = datetime.datetime.utcnow()
                 await ctx.send(embed=em)
             else:
@@ -1574,10 +1601,128 @@ class economy(commands.Cog):
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"last_daily": str(date)}})
             self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"money": user["money"] + 800}})
             em = discord.Embed(title=f"Daily Reward for {ctx.author.name}",
-                               description=f"**$800** was placed in {ctx.author.name}'s account", color=discord.Colour.blue())
+                               description=f"**$800** was placed in {ctx.author.name}'s account",
+                               color=discord.Colour.blue())
             em.timestamp = datetime.datetime.utcnow()
             await ctx.send(embed=em)
             return
+
+    @commands.command()
+    async def build(self, ctx):
+        if self.bot.guild_db.find_one({"_id": ctx.guild.id})["economy_disabled"]:
+            await ctx.send("Economy is disabled for this server.")
+            return
+        user = self.bot.user_db.find_one({"_id": ctx.author.id})
+        if user is None:
+            await ctx.send("You must have a career, use `startcareer`")
+            return
+
+        inventory = user["inventory"]
+
+        def in_inventory(name):
+            return ":white_check_mark:" if name in inventory else ":x:"
+
+        embed = discord.Embed(title=f"{ctx.author.name}'s Workbench",
+                              description=f"**Power:    <:power:831458832001138728> | {in_inventory('psu')} <:powerplug:831458832013590569> | {in_inventory('cable')}**\n\n**Storage:  <:ssd:831458832244146196> | {in_inventory('ssd')} <:harddisk:831458831786573834> | {in_inventory('hard disk')}**\n\n**Onboard:   <:motherboard:831458831811870720> | {in_inventory('motherboard')} <:ram_1:831458832064446465> | {in_inventory('ram')}**\n\n**CPU/GPU:    <:cpu:831458831388770335> | {in_inventory('cpu')}  <:graphicscard:831458831493890079> | {in_inventory('graphics card')}**\n\n**Fan:     <:fan:831458831690760192> | {in_inventory('fan')}**\n\n**Cooling:    <:pipe:831458831900999690> | {in_inventory('water cooler pipe')} <:tank:831458832131686411> | {in_inventory('water cooler tank')}**",
+                              color=discord.Color.orange())
+
+        pc_parts = ["cable", "hard disk", "ram", "fan", "psu", "cpu", "motherboard", "graphics card",
+                    "water cooler tank", "water cooler pipe", "ssd"]
+        laptop_parts = ["cable", "hard disk", "ram", "fan", "cpu", "motherboard", "ssd"]
+
+        msg = await ctx.send(embed=embed, components=[[
+            Button(label="Build PC", id="pc",
+                   style=ButtonStyle.green if all(item in inventory for item in pc_parts) else ButtonStyle.red),
+            Button(label="Build Laptop", id="laptop",
+                   style=ButtonStyle.green if all(item in inventory for item in laptop_parts) else ButtonStyle.red)
+        ]])
+
+        page = "workbench"
+
+        while True:
+            user = self.bot.user_db.find_one({"_id": ctx.author.id})
+            inventory = user["inventory"]
+
+            try:
+                res = await self.bot.wait_for("button_click",
+                                              check=lambda i: i.message.id == msg.id and i.user.id == ctx.author.id,
+                                              timeout=60)
+                if res.component.id == "back":
+                    page = "workbench"
+                    await res.respond(type=InteractionType.UpdateMessage, embed=embed, components=[[
+                        Button(label="Build PC", id="pc",
+                               style=ButtonStyle.green if all(
+                                   item in inventory for item in pc_parts) else ButtonStyle.red),
+                        Button(label="Build Laptop", id="laptop", style=ButtonStyle.green if all(
+                            item in inventory for item in laptop_parts) else ButtonStyle.red)
+                    ]])
+                elif res.component.style == ButtonStyle.red:
+                    page = "back"
+                    set1 = set(pc_parts if res.component.id == "pc" else laptop_parts)
+                    set2 = set(inventory)
+
+                    missing = list(sorted(set1 - set2))
+
+                    em = discord.Embed(title="Parts missing",
+                                       description=f"You are missing these parts in order to build a {'pc' if res.component.id == 'pc' else 'laptop'}:\n**{missing}**",
+                                       color=discord.Color.red())
+                    em.set_footer(text="You can get more parts by working.")
+
+                    await res.respond(type=InteractionType.UpdateMessage, embed=em, components=[
+                        Button(label="Go back", style=ButtonStyle.gray, id="back")
+                    ])
+                elif res.component.style == ButtonStyle.green:
+                    page = "back"
+                    if res.component.id == "pc":
+                        for part in pc_parts:
+                            # Remove the parts
+                            inventory.remove(part)
+
+                        # Add a PC to the inventory
+                        inventory.append("pc")
+
+                        # Respond with embed
+                        em = discord.Embed(title="You built a PC", description=f"You made a PC that you can sell.",
+                                           colour=discord.Colour.green())
+                    else:
+                        for part in laptop_parts:
+                            # Remove the parts
+                            inventory.remove(part)
+
+                        # Add a laptop to the inventory
+                        inventory.append("average laptop")
+
+                        # Respond with embed
+                        em = discord.Embed(title=f"You built an average laptop",
+                                           description=f"You made a laptop that you can sell or use.",
+                                           colour=discord.Colour.green())
+
+                    self.bot.user_db.update_one({"_id": ctx.author.id}, {"$set": {"inventory": inventory}})
+
+                    await res.respond(type=InteractionType.UpdateMessage, embed=em, components=[
+                        Button(label="Go back", style=ButtonStyle.gray, id="back")
+                    ])
+
+            except asyncio.TimeoutError:
+                if page == "workbench":
+                    await msg.edit(components=[[
+                        Button(label="Build PC", id="pc",
+                               style=ButtonStyle.gray, disabled=True),
+                        Button(label="Build Laptop", id="laptop",
+                               style=ButtonStyle.gray, disabled=True)
+                    ]])
+                else:
+                    await msg.edit(components=[[
+                        Button(label="Go back", id="back",
+                               style=ButtonStyle.gray, disabled=True)
+                    ]])
+
+    @build.error
+    async def build_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Specify the device you want to build. Example: `build computer`")
+            return
+        raise error
 
     @hack.error
     async def hack_error(self, ctx, error):
@@ -1596,7 +1741,8 @@ class economy(commands.Cog):
                 "You must specify a discord.Member object and an amount as an integer. `give @SomeGuy 100` or `give 123456789 100`\nYou can also add a message at the end: `give @Carl 150 take some money!`")
             return
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("You must include a member and an amount of money to give them. For more info use `py help give`")
+            await ctx.send(
+                "You must include a member and an amount of money to give them. For more info use `py help give`")
             return
         raise error
 
@@ -1612,6 +1758,7 @@ class economy(commands.Cog):
             await ctx.author.send("Invalid member type given, you must mention a member or give his id.")
             return
         raise error
+
 
 def setup(bot):
     bot.add_cog(economy(bot))
