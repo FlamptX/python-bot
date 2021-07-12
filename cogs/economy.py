@@ -52,11 +52,11 @@ def item_emoji(part):
     elif part == "psu":
         return "<:power:831458832001138728>"
     elif part == "laptop":
-        return ":keyboard:"
+        return "<:laptop_py:864144450082832394>"
     elif part == "office pc":
-        return ":computer:"
+        return "<:office_pc_py:864144469774172160>"
     elif part == "gaming pc":
-        return ":desktop:"
+        return "<:gaming_pc_py:864144477312909312>"
     elif part == "pc":
         return ":joystick:"
     else:
@@ -680,11 +680,11 @@ class economy(commands.Cog):
         laptops = f""
         for item in inventory:
             if item == "laptop":
-                emoji = ":keyboard: "
+                emoji = "<:laptop_py:864144450082832394> "
             elif item == "office pc":
-                emoji = ":computer: "
+                emoji = "<:office_pc_py:864144469774172160> "
             elif item == "gaming pc":
-                emoji = ":desktop: "
+                emoji = "<:gaming_pc_py:864144477312909312> "
             else:
                 continue
             fl = item[0].upper()
@@ -946,7 +946,7 @@ class economy(commands.Cog):
             return
 
         em1 = discord.Embed(title="Shop",
-                            description=":keyboard: **Laptop `$750`**\nBasic laptop for freelancers, slow and easily breaks.\n\n:computer: **Office PC `$2000`**\nWorks alright, average speed and doesn't break often.\n\n:desktop: **Gaming PC `$4500`**\nThe fastest, hardly breaks.\n\n:fax: **Good wifi router `$1500`**\nMedium speed, will get the job done faster.\n\n:satellite: **Very fast wifi router `$4000`**\nLightning fast, almost never lags.\n\n:microbe: **Antivirus `$500`**\nProtect your money from viruses that can randomly steal. Expires after working 12 times.\n\n:shield: **Firewall `$750`**\nProtect your money from hackers. Expires after 5 uses.",
+                            description="<:laptop_py:864144450082832394> **Laptop `$750`**\nBasic laptop for freelancers, slow and easily breaks.\n\n<:office_pc_py:864144469774172160> **Office PC `$2000`**\nWorks alright, average speed and doesn't break often.\n\n<:gaming_pc_py:864144477312909312> **Gaming PC `$4500`**\nThe fastest, hardly breaks.\n\n:fax: **Good wifi router `$1500`**\nMedium speed, will get the job done faster.\n\n:satellite: **Very fast wifi router `$4000`**\nLightning fast, almost never lags.\n\n:microbe: **Antivirus `$500`**\nProtect your money from viruses that can randomly steal. Expires after working 12 times.\n\n:shield: **Firewall `$750`**\nProtect your money from hackers. Expires after 5 uses.",
                             color=discord.Colour.green())
 
         em2 = discord.Embed(title="Company shop",
