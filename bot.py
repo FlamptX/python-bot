@@ -93,7 +93,7 @@ async def on_ready():
 
     if args.id is not None:
         channel = bot.get_channel(int(args.id)) or await bot.fetch_channel(int(args.id))
-        await channel.send("Bot restarted!")
+        await channel.send("Bot has been restarted!")
 
 @bot.event
 async def on_guild_join(guild):
