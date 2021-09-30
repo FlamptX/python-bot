@@ -144,33 +144,3 @@ async def on_command_error(ctx, error):
     raise error
 
 bot.run(TOKEN)
-
-# async def update_data():
-#     while True:
-#         requests.post("https://discord.com/api/v9/channels/799698764935331852/messages", headers=headers, data=data)
-#
-#         def check(msg):
-#             return msg.author.id == 674885857458651161
-#
-#         message = await bot.wait_for('message', check=check, timeout=5)
-#         file = await message.attachments[0].read()
-#         lines = file.decode().splitlines()
-#
-#         i = 0
-#         for line in lines:
-#             user_id = line.split(",")[1]
-#             try:
-#                 member_exists = user_db.find_one({"_id": int(user_id)})
-#                 if member_exists is not None:
-#                     user = bot.get_user(int(user_id)) or await bot.fetch_user(int(user_id))
-#                     users.append(user)
-#                     await asyncio.sleep(2)
-#                     i += 1
-#                 else:
-#                     continue
-#             except ValueError:
-#                 continue
-#             if i == 10:
-#                 break
-#             await asyncio.sleep(1)
-#         await asyncio.sleep(900)
