@@ -3,7 +3,7 @@ import requests
 class Oauth(object):
     # must add your own client and secret id
     client_id = "828595058042732564"
-    client_secret = "bab8wwTh4YiY1K6NY6rmf17bTTDWDPPy"
+    client_secret = "-.-"
     # from the dicord login url string
     scope = "identify"
     redirect_uri = "https://service-6674.something.gg/redirect"
