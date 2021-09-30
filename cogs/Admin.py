@@ -303,7 +303,7 @@ class Admin(commands.Cog):
         except Exception as e:
             print('{}: {}'.format(type(e).__name__, e))
             await ctx.send('{}: {}'.format(type(e).__name__, e))
-        else:
+        els
             print(f'Extension {f"cogs.{module}"} has been reloaded.')
             await ctx.send(f'Extension {f"cogs.{module}"} has been reloaded.')
 
@@ -314,19 +314,3 @@ class Admin(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Admin(bot))
-
-#     @commands.command()
-#     async def send(self, ctx):
-#         channel = await self.bot.fetch_channel(841398524208873492)
-#         embed = discord.Embed(title="Read before opening a question",
-#                               description="> Before opening a question search the answer online or in <#841398408988065852>\n> If it's something easy to fix or answer rather ask in other channels such as <#799338437308055572>\n> **Do not** spam open questions because you can lose permission to open them permanently",
-#                               colour=discord.Colour.red())
-#         await channel.send(embed=embed)
-#
-#     @commands.command()
-#     async def send2(self, ctx):
-#         channel = await self.bot.fetch_channel(841398524208873492)
-#         embed = discord.Embed(title="Information",
-#                               description="You can create questions for help with your code or to ask something.\nBefore that you need to make a profile with `createprofile` in <#799368863720144896>\n\nAnswering, commenting, marking answers as the solution and getting answers marked as the solution will give you points.\nAt certain amounts of points you will get a new rank and a role.\nRanks:\n```python\n1 | Starter | 500 Points\n2 | Intermediate | 1500 Points\n3 | Active Helper | 3000 Points\n4 | Dev Nerd | 10000 Points\n5 | Stack Pro | 50000 Points\n```",
-#                               colour=discord.Colour.orange())
-#         await channel.send(embed=embed)
